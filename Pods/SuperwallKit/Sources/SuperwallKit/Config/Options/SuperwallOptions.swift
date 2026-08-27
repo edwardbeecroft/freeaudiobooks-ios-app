@@ -1,0 +1,491 @@
+//
+//  File.swift
+//
+//
+//  Created by Yusuf Tör on 11/07/2022.
+//
+// swiftlint:disable file_length
+
+import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
+
+/// Options for configuring Superwall, including paywall presentation and appearance.
+///
+/// Pass an instance of this class to
+/// ``Superwall/configure(apiKey:purchaseController:options:completion:)-52tke``.
+// swiftlint:disable type_body_length
+@objc(SWKSuperwallOptions)
+@objcMembers
+public final class SuperwallOptions: NSObject, Encodable {
+  /// Configures the appearance and behaviour of paywalls.
+  public var paywalls = PaywallOptions()
+
+  /// A mapping of local resource IDs to ``AssetResource`` values.
+  ///
+  /// Use this to serve paywall assets (images, videos, Lottie animations) from the app
+  /// bundle or an asset catalog instead of fetching them over the network. When a paywall
+  /// references a `localResourceId`, the SDK looks up the corresponding entry here and
+  /// serves it via the `swlocal://` URL scheme.
+  ///
+  /// `URL` conforms to ``AssetResource`` so file-URL call sites keep working. Register an
+  /// `.xcassets` Image Set by passing a `UIImage`.
+  ///
+  /// Set this before calling ``Superwall/configure(apiKey:purchaseController:options:completion:)-52tke``
+  /// to ensure resources are available before any paywall can trigger (e.g. on `app_launch`).
+  ///
+  /// ```swift
+  /// let options = SuperwallOptions()
+  /// options.localResources = [
+  ///   "logo":       UIImage(named: "Logo")!,
+  ///   "hero-image": Bundle.main.url(forResource: "hero", withExtension: "png")!
+  /// ]
+  /// Superwall.configure(apiKey: "your-api-key", options: options)
+  /// ```
+  @nonobjc public var localResources: [String: AssetResource] = [:]
+
+  /// Objective-C bridge for ``localResources``. Accepts `NSURL` and `UIImage` values
+  /// (mirroring the Swift surface); any other value type is dropped.
+  @available(swift, obsoleted: 1.0)
+  @objc(localResources)
+  public var localResourcesObjC: [String: NSObject] {
+    get {
+      return localResources.compactMapValues { resource in
+        if let url = resource as? URL {
+          return url as NSURL
+        }
+        #if canImport(UIKit)
+        if let image = resource as? UIImage {
+          return image
+        }
+        #endif
+        return nil
+      }
+    }
+    set {
+      localResources = newValue.compactMapValues { value in
+        if let url = value as? URL {
+          return url
+        }
+        #if canImport(UIKit)
+        if let image = value as? UIImage {
+          return image
+        }
+        #endif
+        return nil
+      }
+    }
+  }
+
+  /// Controls when the SDK enters test mode.
+  @objc(SWKTestModeBehavior)
+  public enum TestModeBehavior: Int, Encodable, CustomStringConvertible {
+    /// Activates test mode when enabled for a user via the dashboard or when a bundle ID
+    /// mismatch is detected, but never during UI tests.
+    case automatic
+
+    /// Activates test mode only when specifically enabled for a user via the dashboard.
+    case whenEnabledForUser
+
+    /// Test mode is never activated, regardless of configuration.
+    case never
+
+    /// Test mode is always activated, regardless of configuration.
+    case always
+
+    public var description: String {
+      switch self {
+      case .automatic: return "automatic"
+      case .whenEnabledForUser: return "whenEnabledForUser"
+      case .never: return "never"
+      case .always: return "always"
+      }
+    }
+  }
+
+  /// An enum representing the StoreKit versions the SDK should use.
+  @objc(SWKStoreKitVersion)
+  public enum StoreKitVersion: Int, Encodable, CustomStringConvertible {
+    /// Use StoreKit 1.
+    case storeKit1
+
+    /// Use StoreKit 2.
+    case storeKit2
+
+    public var description: String {
+      switch self {
+      case .storeKit1: return "STOREKIT1"
+      case .storeKit2: return "STOREKIT2"
+      }
+    }
+  }
+
+  /// The StoreKit version that the SDK should use.
+  ///
+  /// The SDK will use StoreKit 2 by default if the app is running on iOS 15+, otherwise it
+  /// will fallback to StoreKit 1.
+  public var storeKitVersion: StoreKitVersion
+
+  /// **WARNING**:  The different network environments that the SDK should use.
+  /// Only use this enum to set ``SuperwallOptions/networkEnvironment-swift.property``
+  ///  if told so explicitly by the Superwall team.
+  public enum NetworkEnvironment: Encodable, CustomStringConvertible {
+    /// Default: Uses the standard latest environment.
+    case release
+    /// **WARNING**: Uses a release candidate environment. This is not meant for a production environment.
+    case releaseCandidate
+    /// **WARNING**: Uses the nightly build environment. This is not meant for a production environment.
+    case developer
+    /// **WARNING**: Uses a local development environment. This is not meant for a production environment.
+    case local
+    /// **WARNING**: Uses a custom environment. This is not meant for a production environment.
+    case custom(String)
+
+    public var description: String {
+      switch self {
+      case .release:
+        return "release"
+      case .developer:
+        return "developer"
+      case .local:
+        return "local"
+      case .custom:
+        return "custom"
+      case .releaseCandidate:
+        return "releaseCandidate"
+      }
+    }
+
+    var scheme: String {
+      switch self {
+      case .local:
+        return "http"
+      case .custom(let domain):
+        if let url = URL(string: domain) {
+          return url.scheme ?? "https"
+        }
+      default:
+        return "https"
+      }
+      return "https"
+    }
+
+    var port: Int? {
+      switch self {
+      case .local:
+        return nil
+      case .custom(let domain):
+        if let url = URL(string: domain) {
+          return url.port
+        }
+      default:
+        return nil
+      }
+      return nil
+    }
+
+    var hostDomain: String {
+      switch self {
+      case .release:
+        return "superwall.me"
+      case .releaseCandidate:
+        return "superwallcanary.com"
+      case .developer:
+        return "superwall.dev"
+      case .local:
+        return "localhost"
+      case .custom(let domain):
+        if let url = URL(string: domain) {
+          if let host = url.host {
+            return host
+          }
+        }
+        return domain
+      }
+    }
+
+    var baseHost: String {
+      switch self {
+      case .local:
+        return "localhost:3000"
+      case .custom:
+        return hostDomain
+      default:
+        return "api.\(hostDomain)"
+      }
+    }
+
+    /// Host for the Superwall V2 API (the `apps/api` Cloudflare Worker), whose
+    /// routes live under a `/v2/` path.
+    ///
+    /// This is a DIFFERENT host from ``baseHost`` (the legacy v1 API on
+    /// `api.superwall.me`): the V2 API is served from the `superwall.com`
+    /// domain — `api.superwall.com` in production and `api.superwall.dev` in the
+    /// developer/staging environment.
+    var apiV2Host: String {
+      switch self {
+      case .developer:
+        return "api.superwall.dev"
+      case .local:
+        return "localhost:3001"
+      default:
+        return "api.superwall.com"
+      }
+    }
+
+    /// The base URL for the Superwall dashboard.
+    var dashboardBaseUrl: String {
+      switch self {
+      case .release, .releaseCandidate:
+        return "https://superwall.com"
+      case .developer:
+        return "https://superwall.dev"
+      case .local:
+        return "http://localhost:3000"
+      case .custom(let domain):
+        return domain
+      }
+    }
+
+    var collectorHost: String {
+      switch self {
+      case .local:
+        return "localhost:3000"
+      case .custom:
+        return "collector.superwall.dev"
+      default:
+        return "collector.\(hostDomain)"
+      }
+    }
+
+    var enrichmentHost: String {
+      switch self {
+      case .developer:
+        return "enrichment-api.superwall.dev"
+      case .local:
+        return "localhost:5999"
+      default:
+        return "enrichment-api.superwall.com"
+      }
+    }
+
+    var adServicesHost: String {
+      return "api-adservices.apple.com"
+    }
+
+    var web2AppHost: String {
+      switch self {
+      case .developer,
+        .custom:
+        return "subscriptions-api.superwall.dev"
+      case .local:
+        return "localhost:3045"
+      default:
+        return "subscriptions-api.superwall.com"
+      }
+    }
+
+    var mmpHost: String {
+      switch self {
+      case .developer,
+        .custom:
+        return "mmp.superwall.dev"
+      case .local:
+        return "localhost:3045"
+      default:
+        return "mmp.superwall.com"
+      }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+      case networkEnvironment
+      case customDomain
+    }
+
+    public func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      switch self {
+      case .custom(let domain):
+        try container.encode(domain, forKey: .customDomain)
+      default:
+        break
+      }
+      try container.encode(description, forKey: .networkEnvironment)
+    }
+  }
+
+  /// **WARNING:**: Determines which network environment your SDK should use.
+  /// Defaults to `.release`.  You should under no circumstance change this unless you
+  /// received the go-ahead from the Superwall team.
+  public var networkEnvironment: NetworkEnvironment = .release
+
+  /// A boolean that determines whether Superwall should observe StoreKit purchases outside of Superwall. Defaults to `false`.
+  ///
+  /// When `true`, Superwall will observe StoreKit transactions and report them in your Superwall dashboard. Superwall will not finish transactions made outside of Superwall.
+  ///
+  /// - Note: You cannot use ``Superwall/purchase(_:)`` while this is `true`.
+  public var shouldObservePurchases = false
+
+  /// Controls which events are sent to the Superwall servers.
+  ///
+  /// Defaults to ``EventTrackingBehavior/all``. Set this to ``EventTrackingBehavior/superwallOnly``
+  /// to suppress user-initiated tracking, trigger fires, and user-attribute updates, or to
+  /// ``EventTrackingBehavior/none`` to stop all event collection (e.g. for GDPR compliance).
+  ///
+  /// You can also change this at runtime via ``Superwall/eventTrackingBehavior``.
+  public var eventTrackingBehavior: EventTrackingBehavior = .all
+
+  /// Enables the sending of non-Superwall tracked events and properties back to the Superwall servers.
+  /// Defaults to `true`.
+  ///
+  /// - Warning: Deprecated. Use ``eventTrackingBehavior`` instead.
+  ///   Setting this to `false` maps to ``EventTrackingBehavior/superwallOnly`` unless the current
+  ///   value is already ``EventTrackingBehavior/none``, in which case `.none` is preserved.
+  ///   Setting it back to `true` maps to ``EventTrackingBehavior/all``.
+  @available(*, deprecated, renamed: "eventTrackingBehavior")
+  public var isExternalDataCollectionEnabled: Bool {
+    get {
+      return eventTrackingBehavior == .all
+    }
+    set {
+      if newValue {
+        eventTrackingBehavior = .all
+      } else if eventTrackingBehavior != .none {
+        eventTrackingBehavior = .superwallOnly
+      }
+    }
+  }
+
+  /// Sets the device locale identifier to use when evaluating audience filters.
+  ///
+  /// This defaults to the `autoupdatingCurrent` locale identifier. However, you can set
+  /// this to any locale identifier to override it. E.g. `en_GB`. This is typically used for testing
+  /// purposes.
+  ///
+  /// You can also preview your paywall in different locales using
+  /// [In-App Previews](https://docs.superwall.com/docs/in-app-paywall-previews).
+  public var localeIdentifier: String?
+
+  /// Forwards events from the game controller to the paywall. Defaults to `false`.
+  ///
+  /// Set this to `true` to forward events from the Game Controller to the Paywall via ``Superwall/gamepadValueChanged(gamepad:element:)``.
+  public var isGameControllerEnabled = false
+
+  /// Enables experimental device variables. These are subject to change. Defaults to `false`.
+  public var enableExperimentalDeviceVariables = false
+
+  /// Disables the app transaction check on SDK launch. Defaults to `false`.
+  public var shouldBypassAppTransactionCheck = false
+
+  /// Controls when the SDK enters test mode. Defaults to `.automatic`.
+  ///
+  /// - `.automatic`: Activates test mode when enabled for a user via the dashboard or when
+  ///   a bundle ID mismatch is detected, but never during UI tests.
+  /// - `.whenEnabledForUser`: Activates test mode only when specifically enabled for a
+  ///   user via the dashboard.
+  /// - `.never`: Test mode is never activated, regardless of configuration.
+  /// - `.always`: Test mode is always activated, regardless of configuration.
+  public var testModeBehavior: TestModeBehavior = .automatic
+
+  /// Determines the number of times the SDK will attempt to get the Superwall configuration after a network
+  /// failure before it times out. Defaults to 6.
+  ///
+  /// Adjust this if you want the SDK to call the ``PaywallPresentationHandler/onError(_:)``
+  /// handler of the ``PaywallPresentationHandler`` faster when you call ``Superwall/register(placement:)``
+  public var maxConfigRetryCount = 6 {
+    didSet {
+      // Must be >= 0
+      if maxConfigRetryCount < 0 {
+        maxConfigRetryCount = 0
+      }
+    }
+  }
+
+  /// Configuration for printing to the console.
+  @objc(SWKLogging)
+  @objcMembers
+  public final class Logging: NSObject, Encodable {
+    /// Defines the minimum log level to print to the console. Defaults to `warn`.
+    public var level: LogLevel = .info
+
+    /// Defines the scope of logs to print to the console. Defaults to .all.
+    public var scopes: Set<LogScope> = [.all]
+
+    private enum CodingKeys: String, CodingKey {
+      case logLevel
+      case logScopes
+    }
+
+    public func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      try container.encode(level, forKey: .logLevel)
+      try container.encode(scopes, forKey: .logScopes)
+    }
+  }
+  /// The log scope and level to print to the console.
+  public var logging = Logging()
+
+  private enum CodingKeys: String, CodingKey {
+    case eventTrackingBehavior
+    case isExternalDataCollectionEnabled
+    case localeIdentifier
+    case isGameControllerEnabled
+    case storeKitVersion
+    case maxConfigRetryCount
+    case shouldObservePurchases
+    case enableExperimentalDeviceVariables
+    case testModeBehavior
+  }
+
+  public override init() {
+    let key = "SKIncludeConsumableInAppPurchaseHistory"
+    if let includeConsumableHistory = Bundle.main.object(forInfoDictionaryKey: key) as? Bool,
+      includeConsumableHistory {
+      if #available(iOS 18.0, *) {
+        self.storeKitVersion = .storeKit2
+      } else {
+        self.storeKitVersion = .storeKit1
+      }
+    } else {
+      if #available(iOS 15.0, *) {
+        self.storeKitVersion = .storeKit2
+      } else {
+        self.storeKitVersion = .storeKit1
+      }
+    }
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    // Manually encode PaywallOptions properties
+    try paywalls.encode(to: encoder)
+    try networkEnvironment.encode(to: encoder)
+    try logging.encode(to: encoder)
+
+    try container.encode(eventTrackingBehavior.description, forKey: .eventTrackingBehavior)
+    // Keep emitting the deprecated `isExternalDataCollectionEnabled` boolean so
+    // backends/dashboards still reading it don't treat opted-out clients as the
+    // default. Mirrors the deprecated property (true only for `.all`).
+    try container.encode(eventTrackingBehavior == .all, forKey: .isExternalDataCollectionEnabled)
+    try container.encode(localeIdentifier, forKey: .localeIdentifier)
+    try container.encode(isGameControllerEnabled, forKey: .isGameControllerEnabled)
+    try container.encode(storeKitVersion.description, forKey: .storeKitVersion)
+    try container.encode(maxConfigRetryCount, forKey: .maxConfigRetryCount)
+    try container.encode(shouldObservePurchases, forKey: .shouldObservePurchases)
+    try container.encode(enableExperimentalDeviceVariables, forKey: .enableExperimentalDeviceVariables)
+    try container.encode(testModeBehavior.description, forKey: .testModeBehavior)
+  }
+
+  func toDictionary() -> [String: Any] {
+    guard let data = try? JSONEncoder().encode(self) else {
+      return [:]
+    }
+    let jsonObject = try? JSONSerialization.jsonObject(with: data, options: .allowFragments)
+    if let dictionary = jsonObject.flatMap({ $0 as? [String: Any] }) {
+      return dictionary
+    } else {
+      return [:]
+    }
+  }
+}

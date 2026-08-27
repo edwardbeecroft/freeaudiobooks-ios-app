@@ -1,0 +1,202 @@
+{
+  "identifier" : "6D52B9F8",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_compatibilityTimeRate" : {
+      "3" : 6
+    },
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "GBR",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ],
+    "_timeRate" : 15
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "2784ABCB",
+      "localizations" : [
+
+      ],
+      "name" : "FreeBooks Pro 4.99/24.99",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "24.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "39CEC54D",
+          "introductoryOffer" : {
+            "internalID" : "0B566B02",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlock All Features & Remove Ads",
+              "displayName" : "FreeBooks Pro - Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "freebooks_2499_1y_1w",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual £24.99, 1-week free trial",
+          "subscriptionGroupID" : "2784ABCB",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : true,
+          "groupNumber" : 2,
+          "internalID" : "5990E0D6",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock All Features & Remove Ads",
+              "displayName" : "FreeBooks Pro - Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "freebooks_499_1m_0wk",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly £4.99, no free trial",
+          "subscriptionGroupID" : "2784ABCB",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    },
+    {
+      "id" : "9B71536B",
+      "localizations" : [
+
+      ],
+      "name" : "FreeBooks Pro 3.99/19.99",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "19.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "CE9C5DD2",
+          "introductoryOffer" : {
+            "internalID" : "79F59D11",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlock All Features & Remove Ads",
+              "displayName" : "FreeBooks Pro - Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "freebooks_1999_1y_1w",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual £19.99, 1-week free trial",
+          "subscriptionGroupID" : "9B71536B",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "3.99",
+          "familyShareable" : true,
+          "groupNumber" : 2,
+          "internalID" : "E39C6826",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Unlock All Features & Remove Ads",
+              "displayName" : "FreeBooks Pro - Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "freebooks_399_1m_0wk",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly £3.99, no free trial",
+          "subscriptionGroupID" : "9B71536B",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "subscriptionOffersKeyPair" : {
+    "id" : "9319F531",
+    "privateKey" : "MF8CAQEEGARQ7czzQ7xvNZAPlMjJQqtXS2NTvK8FzqAKBggqhkjOPQMBAaE0AzIA\nBJGIQlctvJayagBT9mZs8kVrw4ekRom4yU2ynxw8pxnRk7uNkh5VNmrphEZozbJY\nnQ==",
+    "publicKey" : "MEkwEwYHKoZIzj0CAQYIKoZIzj0DAQEDMgAEkYhCVy28lrJqAFP2ZmzyRWvDh6RG\nibjJTbKfHDynGdGTu42SHlU2aumERmjNslid"
+  },
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

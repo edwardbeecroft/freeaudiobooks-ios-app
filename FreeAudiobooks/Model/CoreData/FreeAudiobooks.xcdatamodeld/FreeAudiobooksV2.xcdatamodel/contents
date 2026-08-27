@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24299" systemVersion="25A362" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="CDBookInternal" representedClassName="CDBookInternal" syncable="YES" codeGenerationType="class">
+        <attribute name="audioURLs" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="NSDictionary"/>
+        <attribute name="authorName" optional="YES" attributeType="String"/>
+        <attribute name="availableForAllDateString" optional="YES" attributeType="String"/>
+        <attribute name="blurb" attributeType="String"/>
+        <attribute name="bookTypeString" optional="YES" attributeType="String"/>
+        <attribute name="chapterCount" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="containsAdultContent" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="coverImageURL" attributeType="String"/>
+        <attribute name="coverImageURLThumbnail" attributeType="String"/>
+        <attribute name="coverImageURLXL" attributeType="String"/>
+        <attribute name="datePersisted" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="datePublished" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dateUpdated" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="deeplinkURL" optional="YES" attributeType="String"/>
+        <attribute name="genreString" attributeType="String"/>
+        <attribute name="heroBackgroundImageURL" optional="YES" attributeType="String"/>
+        <attribute name="heroBackgroundImageURLXL" optional="YES" attributeType="String"/>
+        <attribute name="heroLayout" optional="YES" attributeType="String"/>
+        <attribute name="heroSubtitle" optional="YES" attributeType="String"/>
+        <attribute name="heroTitle" optional="YES" attributeType="String"/>
+        <attribute name="isHidden" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="isSubscriptionOnly" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="numberOfRatings" optional="YES" attributeType="Integer 32" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="rating" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="readerCount" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="readingTimeMinutes" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="tagsData" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="NSArray"/>
+        <attribute name="title" attributeType="String"/>
+        <attribute name="uuid" attributeType="String"/>
+    </entity>
+    <entity name="CDBookInternalAudio" representedClassName="CDBookInternalAudio" syncable="YES" codeGenerationType="class">
+        <attribute name="audioData" attributeType="Binary"/>
+        <attribute name="bookID" optional="YES" attributeType="String"/>
+        <attribute name="datePersisted" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="duration" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="fileSize" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="language" optional="YES" attributeType="String"/>
+        <attribute name="numberOfRatings" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="originalURL" attributeType="String"/>
+        <attribute name="rating" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CDBookInternalContent" representedClassName="CDBookInternalContent" syncable="YES" codeGenerationType="class">
+        <attribute name="bookID" attributeType="String"/>
+        <attribute name="datePersisted" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="isTemporaryDownload" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="sections" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="NSArray"/>
+    </entity>
+</model>

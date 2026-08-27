@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>accountShareWithFriendsCellText</key>
+	<string>Invite Friends</string>
+	<key>addRoadmapItemButtonTitle</key>
+	<string>Suggest Something</string>
+	<key>appStoreReviewURLAB</key>
+	<string>https://itunes.apple.com/us/app/appName/id*APPID*?mt=8&amp;action=write-review</string>
+	<key>appStoreURLAB</key>
+	<string>https://apps.apple.com/us/app/freeaudiobooks-listen-now/id6773306508</string>
+	<key>bookCompletionRatingPromptLabelAB</key>
+	<string>Rate this audiobook</string>
+	<key>bookCompletionRatingPromptLabelBookAB</key>
+	<string>Rate this book</string>
+	<key>bookCompletionReviewIntroTextAB</key>
+	<string>Help other listeners discover this audiobook with a review.</string>
+	<key>bookCompletionReviewPlaceholderTextAB</key>
+	<string>I couldn&apos;t stop listening. The characters felt so real and I loved where the story went.</string>
+	<key>bookCompletionShareButtonTitle</key>
+	<string>Share</string>
+	<key>bookCompletionTitleLabel</key>
+	<string>Nice work!</string>
+	<key>bookReviewVariantAB</key>
+	<string>originalRatingRequired</string>
+	<key>checkConnectivityOnAudioPlaybackAB</key>
+	<true/>
+	<key>currentlySubscribedAB</key>
+	<string>You&apos;re all set to receive updates from the FreeAudiobooks Team! We&apos;ll send you the latest tips, tricks and features.</string>
+	<key>dailyReminderNotificationBody</key>
+	<string>Tap to continue where you left off.</string>
+	<key>dailyReminderNotificationTitleAB</key>
+	<string>Time for your {minutes}-minute listen</string>
+	<key>defaultReaderTheme</key>
+	<string>cream</string>
+	<key>defaultReaderThemeDark</key>
+	<string>extraDark</string>
+	<key>defaultReaderThemeLight</key>
+	<string>cream</string>
+	<key>defaultReadingParagraphStyle</key>
+	<string>spaced</string>
+	<key>discordInviteURLAB</key>
+	<string>https://discord.gg/gukCXgg5yP</string>
+	<key>discoverEarlyAccessUnlockCTATitle</key>
+	<string>Try Free</string>
+	<key>emailOptInBookCompletedCTA</key>
+	<string>Send me the roundup</string>
+	<key>emailOptInBookCompletedCTAPaid</key>
+	<string>Send me the roundup</string>
+	<key>emailOptInBookCompletedSubtitleAB</key>
+	<string>Get a monthly roundup tailored to what you love to listen to.</string>
+	<key>emailOptInBookCompletedSubtitlePaid</key>
+	<string>One monthly roundup with new releases and standout picks.</string>
+	<key>emailOptInBookCompletedTitle</key>
+	<string>Keep the momentum going</string>
+	<key>emailOptInBookCompletedTitlePaidAB</key>
+	<string>Keep discovering great listens</string>
+	<key>emailOptInBookSavedCTAAB</key>
+	<string>Get Monthly Picks</string>
+	<key>emailOptInBookSavedCTAPaidAB</key>
+	<string>Get Monthly Picks</string>
+	<key>emailOptInBookSavedSubtitle</key>
+	<string>One email a month with picks in your genres.</string>
+	<key>emailOptInBookSavedSubtitlePaid</key>
+	<string>One email a month with picks tailored to your taste.</string>
+	<key>emailOptInBookSavedTitle</key>
+	<string>Want more like this?</string>
+	<key>emailOptInBookSavedTitlePaid</key>
+	<string>Want more like this?</string>
+	<key>emailOptInDetailViewCTA</key>
+	<string>Get tailored picks</string>
+	<key>emailOptInDetailViewCTAPaid</key>
+	<string>Get personalized picks</string>
+	<key>emailOptInDetailViewSubtitle</key>
+	<string>Get a monthly email with standout picks in your favorite genres.</string>
+	<key>emailOptInDetailViewSubtitlePaid</key>
+	<string>One email a month with picks tailored to your taste.</string>
+	<key>emailOptInDetailViewTitleAB</key>
+	<string>Find your next great listen</string>
+	<key>emailOptInDetailViewTitlePaid</key>
+	<string>Get personalized picks</string>
+	<key>emailOptInOnboardingCTAAB</key>
+	<string>Get Monthly Picks</string>
+	<key>emailOptInOnboardingSubtitle</key>
+	<string>One email a month with standout picks in your genres.</string>
+	<key>emailOptInOnboardingTitleAB</key>
+	<string>Find your next great listen</string>
+	<key>engagementNotificationsDaysDelay</key>
+	<integer>2</integer>
+	<key>facebookPageURLAB</key>
+	<string>https://facebook.com/audiobooksapp.free</string>
+	<key>freebooksEmailAB</key>
+	<string>hello@freeaudiobooksapp.com</string>
+	<key>fullscreenReviewVCButtonTitleAB</key>
+	<string>Help FreeAudiobooks</string>
+	<key>fullscreenReviewVCDetailTextAB</key>
+	<string>Please help us to keep adding great features to FreeAudiobooks with an App Store review.||||It&apos;s totally free to do and takes just 30 secs, but has an enormous impact. Thank you!</string>
+	<key>fullscreenReviewVCIntroText</key>
+	<string>Please Review Us 🙏</string>
+	<key>homeVariantAB</key>
+	<string>original</string>
+	<key>inappropriateContentImageTitle</key>
+	<string>Image Content</string>
+	<key>instagramPageURLAB</key>
+	<string>https://www.instagram.com/audiobooksapp</string>
+	<key>instagramSchemeAB</key>
+	<string>instagram://user?username=audiobooksapp</string>
+	<key>isarAB</key>
+	<false/>
+	<key>isarAB2</key>
+	<false/>
+	<key>isarAB3</key>
+	<false/>
+	<key>isReadingVCInterstitialAdEnabled</key>
+	<true/>
+	<key>isRecapFeatureEnabled</key>
+	<true/>
+	<key>isRoadmapDiscoverHeaderEnabled</key>
+	<true/>
+	<key>isRoadmapEnabled</key>
+	<true/>
+	<key>isStatsUIEnabled</key>
+	<true/>
+	<key>logoutAreYouSureBodyAB</key>
+	<string>Are you sure you&apos;d like to sign out? All downloaded content and listening progress will be deleted, and you will no longer be able to access your saved audiobooks.</string>
+	<key>marketingPermissionsImageNumber</key>
+	<integer>1</integer>
+	<key>marketingPermissionsNoButtonTitle</key>
+	<string>No, thanks</string>
+	<key>marketingPermissionsSubtitleAB</key>
+	<string>Join over 100,000 listeners getting free monthly audiobooks, straight to their inbox.</string>
+	<key>marketingPermissionsTitle</key>
+	<string>Get the good stuff ✨</string>
+	<key>marketingPermissionsUIVariant</key>
+	<string>original</string>
+	<key>marketingPermissionsYesButtonTitle</key>
+	<string>Yes, please</string>
+	<key>minimumAppVersionAB</key>
+	<string>2.1.0</string>
+	<key>monthsBetweenAskingForReview</key>
+	<integer>1</integer>
+	<key>multipleImagesInappropriateContentMessage</key>
+	<string>It looks like one of your chosen images might contain inappropriate content. Please select try again. If you believe this detection is an error, please contact support at hello@freeaudiobooksapp.com.</string>
+	<key>notCurrentlySubscribedAB</key>
+	<string>You&apos;re not currently receiving updates from the FreeAudiobooks Team. Subscribe now for the latest tips, tricks and features.</string>
+	<key>onbBuildsHabitsChartLabelAB</key>
+	<string>Your listening</string>
+	<key>onbBuildsHabitsFootnoteAB</key>
+	<string>Based on survey of 5,700 new listeners, 2026</string>
+	<key>onbBuildsHabitsFreeAudiobooksAB</key>
+	<string>FreeAudiobooks</string>
+	<key>onbBuildsHabitsMetricAB</key>
+	<string>86% of listeners kept listening||weekly after 30 days.</string>
+	<key>onbBuildsHabitsTitleAB</key>
+	<string>FreeAudiobooks builds a lasting listening habit</string>
+	<key>onbBuildsHabitsTryingAlone</key>
+	<string>Trying alone</string>
+	<key>onbContinueButtonTitle</key>
+	<string>Continue</string>
+	<key>onbCredibilityReviewsReviewCount</key>
+	<string>10,000+</string>
+	<key>onbCredibilityReviewsSectionTitleAB</key>
+	<string>FreeAudiobooks was made for||people like you</string>
+	<key>onbCredibilityReviewsStarRating</key>
+	<string>4.8</string>
+	<key>onbCredibilityReviewsTestimonial1Name</key>
+	<string>Sarah M.</string>
+	<key>onbCredibilityReviewsTestimonial1TextAB</key>
+	<string>Found so many great listens I never would have picked up otherwise. The recommendations are spot on!</string>
+	<key>onbCredibilityReviewsTestimonial2Name</key>
+	<string>Rachel T.</string>
+	<key>onbCredibilityReviewsTestimonial2TextAB</key>
+	<string>Perfect for my daily commute. I&apos;ve finished more audiobooks this year than I ever thought possible.</string>
+	<key>onbCredibilityReviewsTestimonial3Name</key>
+	<string>Emma R.</string>
+	<key>onbCredibilityReviewsTestimonial3TextAB</key>
+	<string>Listen while I cook, clean, walk the dog—it&apos;s changed how I get through books.</string>
+	<key>onbCredibilityReviewsTitle</key>
+	<string>Give us a rating</string>
+	<key>onbCredibilityReviewsUserCountAB</key>
+	<string>500K+ FreeAudiobooks Listeners</string>
+	<key>onbDailyListeningGoalSubtitleAB</key>
+	<string>Start small and build a lasting habit</string>
+	<key>onbDailyListeningGoalTitleAB</key>
+	<string>Set a daily listening goal</string>
+	<key>onbGenreSelectionSubtitle</key>
+	<string>Pick at least one to personalize your experience</string>
+	<key>onbGenreSelectionTitle</key>
+	<string>Choose your favorite genres</string>
+	<key>onbGenreSelectionUseSFSymbols</key>
+	<true/>
+	<key>onbHowDidYouHearSubtitle</key>
+	<string>We&apos;d love to know how you found us</string>
+	<key>onbHowDidYouHearTitle</key>
+	<string>Where did you hear about us?</string>
+	<key>onbListeningOccasionSubtitleAB</key>
+	<string>We&apos;ll tailor recommendations to your routine</string>
+	<key>onbListeningOccasionTitleAB</key>
+	<string>When do you listen?</string>
+	<key>onbMakeTimeHeadlineHardToStay</key>
+	<string>Small streaks turn into a real habit</string>
+	<key>onbMakeTimeHeadlineLackOfTimeAB</key>
+	<string>FreeAudiobooks is built for busy days</string>
+	<key>onbMakeTimeHeadlineTooManyChoicesAB</key>
+	<string>You&apos;ll always know what to listen to next</string>
+	<key>onbMakeTimeStatHardToStayAB</key>
+	<string>Start with 10 minutes of listening a day—||habits grow from small wins.</string>
+	<key>onbMakeTimeStatLackOfTimeAB</key>
+	<string>76% start listening within 60 seconds||of opening FreeAudiobooks.</string>
+	<key>onbMakeTimeStatTooManyChoicesAB</key>
+	<string>82% start their next audiobook within||2 minutes of finishing one.</string>
+	<key>onbPersonalizedPicksRomanceImagev2</key>
+	<string>16</string>
+	<key>onbPersonalizedPicksSubtitleAB</key>
+	<string>2,500+ audiobooks match your interests</string>
+	<key>onbPersonalizedPicksTitleNoBadge</key>
+	<string>Your library is ready</string>
+	<key>onbPersonalizedPicksTitleOriginal</key>
+	<string>Your library is ready</string>
+	<key>onbPreviousAppsSubtitle</key>
+	<string>Select all that apply</string>
+	<key>onbPreviousAppsTitleAB</key>
+	<string>Have you used other audiobook apps?</string>
+	<key>onbPushNotificationEnableButtonTitle</key>
+	<string>Enable Notifications</string>
+	<key>onboardingNotificationsVariantAB</key>
+	<string>original</string>
+	<key>onbPushNotificationConsistencyStat</key>
+	<string>Users who set reminders listen 2x more consistently</string>
+	<key>onbPushNotificationSubtitleAB</key>
+	<string>Get reminders and new audiobook alerts</string>
+	<key>onbPushNotificationTitle</key>
+	<string>We&apos;ll help you reach your goal</string>
+	<key>onbReadingBarriersSubtitle</key>
+	<string>Select all that apply</string>
+	<key>onbReadingBarriersTitleAB</key>
+	<string>What usually stops you from listening more?</string>
+	<key>onbReadingFrequencySubtitleAB</key>
+	<string>This helps us recommend the right audiobooks for you</string>
+	<key>onbReadingFrequencyTitleAB</key>
+	<string>How often do you listen?</string>
+	<key>onbSaveProgressAuthSubtitleAB</key>
+	<string>Sign in to sync your listening across devices</string>
+	<key>onbSaveProgressAuthTitle</key>
+	<string>Save your progress</string>
+	<key>onbWelcomeButtonTitle</key>
+	<string>Get Started</string>
+	<key>onbWelcomeSubtitleAB</key>
+	<string>Find your next listen fast.</string>
+	<key>onbWelcomeTitleAB</key>
+	<string>Press play on thousands||of addictive stories.</string>
+	<key>onbWhyDoYouListenSubtitleAB</key>
+	<string>Select all that apply</string>
+	<key>onbWhyDoYouListenTitleAB</key>
+	<string>Why do you listen?</string>
+	<key>onboardingVariant</key>
+	<string>fullFlow</string>
+	<key>onboardingVariantv2</key>
+	<string>fullFlowAuthFirst</string>
+	<key>welcomeVideoVariantAB</key>
+	<string>image</string>
+	<key>personalizedPicksVariant</key>
+	<string>subtitleNoBadge</string>
+	<key>privacyPolicyURLAB</key>
+	<string>https://freeaudiobooksapp.com/privacy</string>
+	<key>privacyTermsDialogBody</key>
+	<string>Which document would you like to see?</string>
+	<key>pushPrePromptEnableCTA</key>
+	<string>Enable notifications</string>
+	<key>pushPrePromptNotNowCTA</key>
+	<string>Not now</string>
+	<key>pushPrePromptSubtitleAB</key>
+	<string>We’ll send a gentle reminder if you haven’t listened in a few days.</string>
+	<key>pushPrePromptTitleAB</key>
+	<string>Build a listening habit</string>
+	<key>readingCustomisationPopupSubtitle</key>
+	<string>Subscribe to customise font, text size, theme and more.</string>
+	<key>readingCustomisationPopupTitle</key>
+	<string>Unlock Customisation</string>
+	<key>readingVCInterstitialAdSectionGap</key>
+	<integer>4</integer>
+	<key>requiredLaunchCountForSKReview</key>
+	<integer>1</integer>
+	<key>retentionNudgeEarlyBookChosenBody</key>
+	<string>Start with just one chapter today.</string>
+	<key>retentionNudgeEarlyBookChosenTitle</key>
+	<string>Continue {title}</string>
+	<key>retentionNudgeEarlyNoBookBodyAB</key>
+	<string>Pick your first audiobook — it only takes a minute.</string>
+	<key>retentionNudgeEarlyNoBookTitle</key>
+	<string>Your library is ready</string>
+	<key>retentionNudgeEarlyStartedBodyAB</key>
+	<string>Listen to another chapter today.</string>
+	<key>retentionNudgeEarlyStartedTitle</key>
+	<string>Continue {title}</string>
+	<key>retentionNudgeEveningBookChosenBodyAB</key>
+	<string>Press play and listen for a few minutes.</string>
+	<key>retentionNudgeEveningBookChosenTitle</key>
+	<string>Continue {title} tonight</string>
+	<key>retentionNudgeEveningNoBookBodyAB</key>
+	<string>Browse free audiobooks and pick one for this evening.</string>
+	<key>retentionNudgeEveningNoBookTitle</key>
+	<string>Find a story for tonight</string>
+	<key>retentionNudgeEveningStartedBody</key>
+	<string>Pick up where you left off.</string>
+	<key>retentionNudgeEveningStartedTitle</key>
+	<string>Continue {title}</string>
+	<key>retentionNudgeFinalBookChosenBodyAB</key>
+	<string>Try a chapter tonight.</string>
+	<key>retentionNudgeFinalBookChosenTitle</key>
+	<string>{title} is waiting</string>
+	<key>retentionNudgeFinalNoBookBodyAB</key>
+	<string>Browse free audiobooks and find your first listen.</string>
+	<key>retentionNudgeFinalNoBookTitleAB</key>
+	<string>Still looking for an audiobook?</string>
+	<key>retentionNudgeFinalStartedBody</key>
+	<string>Pick up where you left off tonight.</string>
+	<key>retentionNudgeFinalStartedTitle</key>
+	<string>One more chapter of {title}</string>
+	<key>roadmapDiscoverHeaderImage</key>
+	<string>light-bulb.png</string>
+	<key>roadmapInputVariant</key>
+	<string>static</string>
+	<key>shareAppMessageBodyAB</key>
+	<string>This is the FreeAudiobooks app - featuring thousands of captivating audiobooks and stories - all free! Check it out at:</string>
+	<key>shareStoryMessageBodyAB</key>
+	<string>Check out this brilliant audiobook on FreeAudiobooks:</string>
+	<key>shouldResumeOnReadingVC</key>
+	<true/>
+	<key>shouldSendEngagementEngineNotifications</key>
+	<true/>
+	<key>shouldSendOnboardingRetentionNudges</key>
+	<true/>
+	<key>shouldShowEarlyAccessSection</key>
+	<false/>
+	<key>shouldShowWrittenReviews</key>
+	<true/>
+	<key>showAdultContentOnCovers</key>
+	<true/>
+	<key>showDiscoverEASearchUpsellWidget</key>
+	<true/>
+	<key>showJoinDiscordInAccountVC</key>
+	<true/>
+	<key>showRoadmapBetaTag</key>
+	<true/>
+	<key>singleImageInappropriateContentMessage</key>
+	<string>It looks like this image might contain inappropriate content. Please select another image and try again. If you believe this detection is an error, please contact support at hello@freeaudiobooksapp.com.</string>
+	<key>startReadingCTAVariant</key>
+	<string>readNow</string>
+	<key>subscribePopupCTA</key>
+	<string>Subscribe Now</string>
+	<key>subscribeSuccessBodyAB</key>
+	<string>Enjoy early access, unlimited audiobooks, and ad-free listening.</string>
+	<key>termsOfUseURLAB</key>
+	<string>https://freeaudiobooksapp.com/terms</string>
+	<key>tiktokPageURLAB</key>
+	<string>https://www.tiktok.com/@audiobooksapp</string>
+	<key>tiktokSchemeAB</key>
+	<string>snssdk1233://@audiobooksapp</string>
+	<key>twitterPageURLAB</key>
+	<string>https://x.com/audiobooksapp</string>
+	<key>twitterSchemeAB</key>
+	<string>twitter://user?screen_name=audiobooksapp</string>
+	<key>upsellTitleAB</key>
+	<string>Try Audiobooks+ Free</string>
+	<key>weeklyListeningQuotaLimitAB</key>
+	<integer>3</integer>
+</dict>
+</plist>

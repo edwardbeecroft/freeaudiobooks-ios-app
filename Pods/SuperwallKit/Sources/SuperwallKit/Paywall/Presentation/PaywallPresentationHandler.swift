@@ -1,0 +1,128 @@
+//
+//  File.swift
+//
+//
+//  Created by Jake Mor on 3/22/23.
+
+import Foundation
+
+/// The handler for ``Superwall/register(placement:params:handler:feature:)`` whose
+/// functions provide status updates for a paywall.
+@objc(SWKPaywallPresentationHandler)
+@objcMembers
+public final class PaywallPresentationHandler: NSObject {
+  /// A block called when the paywall did present.
+  var onPresentHandler: ((PaywallInfo) -> Void)?
+
+  /// A block called when the paywall will dismiss.
+  var onWillDismissHandler: ((PaywallInfo, PaywallResult) -> Void)?
+
+  /// A block called when the paywall will dismiss.
+  ///
+  /// Note the ``StoreProduct`` is only non-nil when ``PaywallResultObjc`` is ``PaywallResultObjc/purchased``.
+  var onWillDismissHandlerObjc: ((PaywallInfo, PaywallResultObjc, StoreProduct?) -> Void)?
+
+  /// A block called when the paywall did dismiss.
+  var onDismissHandler: ((PaywallInfo, PaywallResult) -> Void)?
+
+  /// A block called when the paywall did dismiss.
+  ///
+  /// Note the ``StoreProduct`` is only non-nil when ``PaywallResultObjc`` is ``PaywallResultObjc/purchased``.
+  var onDismissHandlerObjc: ((PaywallInfo, PaywallResultObjc, StoreProduct?) -> Void)?
+
+  /// A block called when an error occurred while trying to present a paywall.
+  var onErrorHandler: ((Error) -> Void)?
+
+  /// A block called when an error occurred while trying to present a paywall.
+  var onSkipHandler: ((PaywallSkippedReason) -> Void)?
+
+  /// An objective-c only block called when an error occurred while trying to present a paywall.
+  var onSkipHandlerObjc: ((PaywallSkippedReasonObjc) -> Void)?
+
+  /// A block called when the paywall requests a custom callback.
+  var onCustomCallbackHandler: ((CustomCallback) async -> CustomCallbackResult)?
+
+  /// Sets the handler that will be called when the paywall did present.
+  ///
+  /// - Parameter handler: A block that accepts a ``PaywallInfo`` object associated with
+  /// the presented paywall.
+  public func onPresent(_ handler: @escaping (PaywallInfo) -> Void) {
+    self.onPresentHandler = handler
+  }
+
+  /// Sets the handler that will be called when the paywall will be dismissed.
+  ///
+  /// - Parameter handler: A block that accepts a ``PaywallInfo`` and ``PaywallResult`` object associated with
+  /// the dismissing paywall.
+  public func onWillDismiss(_ handler: @escaping (PaywallInfo, PaywallResult) -> Void) {
+    self.onWillDismissHandler = handler
+  }
+
+  /// Sets the handler that will be called when the paywall will be dismissed.
+  ///
+  /// - Parameter handler: A block that accepts a ``PaywallInfo``, a ``PaywallResult`` object associated with
+  /// the dismissing paywall and an optional ``StoreProduct`` for when the paywall result is
+  /// ``PaywallResultObjc/purchased``.
+  @available(swift, obsoleted: 1.0)
+  public func onWillDismiss(
+    _ handler: @escaping (PaywallInfo, PaywallResultObjc, StoreProduct?) -> Void
+  ) {
+    self.onWillDismissHandlerObjc = handler
+  }
+
+  /// Sets the handler that will be called when the paywall did dismiss.
+  ///
+  /// - Parameter handler: A block that accepts a ``PaywallInfo`` and ``PaywallResult`` object associated with
+  /// the dismissed paywall.
+  public func onDismiss(_ handler: @escaping (PaywallInfo, PaywallResult) -> Void) {
+    self.onDismissHandler = handler
+  }
+
+  /// Sets the handler that will be called when the paywall did dismiss.
+  ///
+  /// - Parameter handler: A block that accepts a ``PaywallInfo``, a ``PaywallResult`` object associated with
+  /// the dismissed paywall and an optional ``StoreProduct`` for when the paywall result is
+  /// ``PaywallResultObjc/purchased``.
+  @available(swift, obsoleted: 1.0)
+  public func onDismiss(
+    _ handler: @escaping (PaywallInfo, PaywallResultObjc, StoreProduct?) -> Void
+  ) {
+    self.onDismissHandlerObjc = handler
+  }
+
+  /// Sets the handler that will be called when an error occurred while trying to present a paywall.
+  ///
+  /// - Parameter handler: A block that accepts an `Error` indicating why the paywall
+  /// could not present.
+  public func onError(_ handler: @escaping (Error) -> Void) {
+    self.onErrorHandler = handler
+  }
+
+  /// Sets the handler that will be called when a paywall is skipped, but no error has occurred.
+  ///
+  /// - Parameter handler: A block that accepts a ``PaywallSkippedReason`` indicating why the paywall
+  /// was skipped.
+  public func onSkip(_ handler: @escaping (PaywallSkippedReason) -> Void) {
+    self.onSkipHandler = handler
+  }
+
+  /// Sets the handler that will be called when a paywall is skipped, but no error has occurred.
+  ///
+  /// - Parameter handler: A block that accepts a ``PaywallSkippedReasonObjc`` indicating why the paywall
+  /// was skipped.
+  @available(swift, obsoleted: 1.0)
+  public func onSkip(_ handler: @escaping (PaywallSkippedReasonObjc) -> Void) {
+    self.onSkipHandlerObjc = handler
+  }
+
+  /// Sets the handler that will be called when the paywall requests a custom callback.
+  ///
+  /// Use this to handle custom callbacks from your paywall. The callback receives a ``CustomCallback``
+  /// object containing the callback name and any variables, and should return a ``CustomCallbackResult``
+  /// indicating success or failure.
+  ///
+  /// - Parameter handler: An async block that accepts a ``CustomCallback`` and returns a ``CustomCallbackResult``.
+  public func onCustomCallback(_ handler: @escaping (CustomCallback) async -> CustomCallbackResult) {
+    self.onCustomCallbackHandler = handler
+  }
+}

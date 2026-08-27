@@ -1,0 +1,325 @@
+//
+//  File.swift
+//  
+//
+//  Created by brian on 7/27/21.
+//
+// swiftlint:disable function_body_length
+
+import Foundation
+
+/*
+
+  Events conform to a descriminiating union
+
+{
+  "event_name": "close",
+},
+
+{
+  "event_name": "open_url",
+  "url": "https://example.com",
+  "browser_type": "payment_sheet" // optional
+}
+
+*/
+
+struct WrappedPaywallMessages: Decodable {
+  var version: Int = 1
+  var payload: PayloadMessages
+}
+
+struct PayloadMessages: Decodable {
+  var messages: [PaywallMessage]
+
+  private enum CodingKeys: String, CodingKey {
+    case messages = "events"
+  }
+}
+
+enum ReviewType: String, Decodable {
+  case inApp = "in-app"
+  case external
+}
+
+// swiftlint:disable:next type_body_length
+enum PaywallMessage: Decodable, Equatable {
+  case onReady(paywallJsVersion: String)
+	case templateParamsAndUserAttributes
+  case close
+  case restore
+  case openUrl(_ url: URL)
+  case openUrlInSafari(_ url: URL)
+  case openPaymentSheet(_ url: URL)
+  case openDeepLink(url: URL)
+  case purchase(productId: String, shouldDismiss: Bool)
+  case custom(data: String)
+  case customPlacement(name: String, params: JSON)
+  case userAttributesUpdated(attributes: JSON)
+  case initiateWebCheckout(contextId: String)
+  case stripeCheckoutStart(checkoutContextId: String, productId: String)
+  case stripeCheckoutComplete(
+    checkoutContextId: String,
+    productId: String
+  )
+  case stripeCheckoutSubmit(checkoutContextId: String, productId: String)
+  case stripeCheckoutFail(checkoutContextId: String, productId: String)
+  case stripeCheckoutAbandon(checkoutContextId: String, productId: String)
+  case requestStoreReview(ReviewType)
+  case requestPermission(permissionType: PermissionType, requestId: String)
+  case requestCallback(
+    requestId: String,
+    name: String,
+    behavior: CustomCallbackBehavior,
+    variables: JSON?
+  )
+  case hapticFeedback(hapticType: String)
+  case pageView(PageViewData)
+
+  // All cases below here are sent from device to paywall
+  case paywallClose
+  case paywallOpen
+
+  case restoreStart
+  case restoreFail(String)
+  case restoreComplete
+
+  case transactionRestore
+  case transactionStart
+  case transactionComplete(trialEndDate: Date?, productIdentifier: String)
+  case transactionFail
+  case transactionAbandon
+  case transactionTimeout
+
+  // swiftlint:disable:next enum_case_associated_values_count
+  case scheduleNotification(
+    type: LocalNotificationType,
+    title: String,
+    subtitle: String?,
+    body: String,
+    delay: Milliseconds
+  )
+
+  private enum MessageTypes: String, Decodable {
+    case onReady = "ping"
+    case close
+    case restore
+    case openUrl = "open_url"
+    case openUrlInSafari = "open_url_external"
+    case openDeepLink = "open_deep_link"
+    case purchase
+    case custom
+    case customPlacement = "custom_placement"
+    case userAttributesUpdated = "user_attribute_updated"
+    case initiateWebCheckout = "initiate_web_checkout"
+    case stripeCheckoutStart = "stripe_checkout_start"
+    case stripeCheckoutComplete = "stripe_checkout_complete"
+    case stripeCheckoutSubmit = "stripe_checkout_submit"
+    case stripeCheckoutFail = "stripe_checkout_fail"
+    case stripeCheckoutAbandon = "stripe_checkout_abandon"
+    case requestStoreReview = "request_store_review"
+    case scheduleNotification = "schedule_notification"
+    case requestPermission = "request_permission"
+    case requestCallback = "request_callback"
+    case hapticFeedback = "haptic_feedback"
+    case pageView = "page_view"
+  }
+
+  // Everyone write to eventName, other may use the remaining keys
+  // Note: JSONDecoder.fromSnakeCase converts snake_case keys to camelCase automatically
+  private enum CodingKeys: String, CodingKey {
+    case messageType = "eventName"
+    case productId = "productIdentifier"
+    case shouldDismiss
+    case url
+    case link
+    case data
+    case version
+    case name
+    case params
+    case attributes
+    case reviewType
+    case browserType
+    case checkoutContextId
+    case type
+    case title
+    case subtitle
+    case body
+    case delay
+    case permissionType
+    case requestId
+    case behavior
+    case variables
+    case hapticType
+  }
+
+  enum PaywallMessageError: Error {
+    case decoding(String)
+  }
+
+  // swiftlint:disable:next function_body_length cyclomatic_complexity
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    if let messageType = try? values.decode(MessageTypes.self, forKey: .messageType) {
+      switch messageType {
+      case .close:
+        self = .close
+        return
+      case .onReady:
+        let version = try values.decode(String.self, forKey: .version)
+        self = .onReady(paywallJsVersion: version)
+        return
+      case .purchase:
+        if let productId = try? values.decode(String.self, forKey: .productId) {
+          let shouldDismiss = try values.decodeIfPresent(Bool.self, forKey: .shouldDismiss) ?? true
+          self = .purchase(productId: productId, shouldDismiss: shouldDismiss)
+          return
+        }
+      case .restore:
+        self = .restore
+        return
+      case .openUrl:
+        if let urlString = try? values.decode(String.self, forKey: .url),
+          let url = URL(string: urlString) {
+          let browserType = try? values.decode(String.self, forKey: .browserType)
+          #if os(visionOS)
+            // On visionOS, always use openUrl instead of payment sheet
+            self = .openUrl(url)
+          #else
+            self = browserType == "payment_sheet" ? .openPaymentSheet(url) : .openUrl(url)
+          #endif
+          return
+        }
+      case .openUrlInSafari:
+        if let urlString = try? values.decode(String.self, forKey: .url),
+          let url = URL(string: urlString) {
+          self = .openUrlInSafari(url)
+          return
+        }
+      case .openDeepLink:
+        if let urlString = try? values.decode(String.self, forKey: .link),
+          let url = URL(string: urlString) {
+          self = .openDeepLink(url: url)
+          return
+        }
+      case .custom:
+        if let dataString = try? values.decode(String.self, forKey: .data) {
+          self = .custom(data: dataString)
+          return
+        }
+      case .customPlacement:
+        if let name = try? values.decode(String.self, forKey: .name),
+          let params = try? values.decode(JSON.self, forKey: .params) {
+          self = .customPlacement(name: name, params: params)
+          return
+        }
+      case .userAttributesUpdated:
+        if let attributes = try? values.decode(JSON.self, forKey: .attributes) {
+          self = .userAttributesUpdated(attributes: attributes)
+          return
+        }
+      case .initiateWebCheckout:
+        if let checkoutContextId = try? values.decode(String.self, forKey: .checkoutContextId) {
+          self = .initiateWebCheckout(contextId: checkoutContextId)
+          return
+        }
+      case .stripeCheckoutStart:
+        if let checkoutContextId = try? values.decode(String.self, forKey: .checkoutContextId),
+          let productId = try? values.decode(String.self, forKey: .productId) {
+          self = .stripeCheckoutStart(
+            checkoutContextId: checkoutContextId,
+            productId: productId
+          )
+          return
+        }
+      case .stripeCheckoutComplete:
+        if let checkoutContextId = try? values.decode(String.self, forKey: .checkoutContextId),
+          let productId = try? values.decode(String.self, forKey: .productId) {
+          self = .stripeCheckoutComplete(
+            checkoutContextId: checkoutContextId,
+            productId: productId
+          )
+          return
+        }
+      case .stripeCheckoutSubmit:
+        if let checkoutContextId = try? values.decode(String.self, forKey: .checkoutContextId),
+          let productId = try? values.decode(String.self, forKey: .productId) {
+          self = .stripeCheckoutSubmit(
+            checkoutContextId: checkoutContextId,
+            productId: productId
+          )
+          return
+        }
+      case .stripeCheckoutFail:
+        if let checkoutContextId = try? values.decode(String.self, forKey: .checkoutContextId),
+          let productId = try? values.decode(String.self, forKey: .productId) {
+          self = .stripeCheckoutFail(
+            checkoutContextId: checkoutContextId,
+            productId: productId
+          )
+          return
+        }
+      case .stripeCheckoutAbandon:
+        if let checkoutContextId = try? values.decode(String.self, forKey: .checkoutContextId),
+          let productId = try? values.decode(String.self, forKey: .productId) {
+          self = .stripeCheckoutAbandon(
+            checkoutContextId: checkoutContextId,
+            productId: productId
+          )
+          return
+        }
+      case .requestStoreReview:
+        if let reviewType = try? values.decode(ReviewType.self, forKey: .reviewType) {
+          self = .requestStoreReview(reviewType)
+          return
+        }
+      case .scheduleNotification:
+        if let type = try? values.decode(LocalNotificationType.self, forKey: .type),
+          let title = try? values.decode(String.self, forKey: .title),
+          let body = try? values.decode(String.self, forKey: .body),
+          let delay = try? values.decode(Milliseconds.self, forKey: .delay) {
+          let subtitle = try values.decodeIfPresent(String.self, forKey: .subtitle)
+          self = .scheduleNotification(
+            type: type,
+            title: title,
+            subtitle: subtitle,
+            body: body,
+            delay: delay
+          )
+          return
+        }
+      case .requestPermission:
+        if let permissionType = try? values.decode(PermissionType.self, forKey: .permissionType),
+          let requestId = try? values.decode(String.self, forKey: .requestId) {
+          self = .requestPermission(permissionType: permissionType, requestId: requestId)
+          return
+        }
+      case .requestCallback:
+        if let requestId = try? values.decode(String.self, forKey: .requestId),
+          let name = try? values.decode(String.self, forKey: .name),
+          let behavior = try? values.decode(CustomCallbackBehavior.self, forKey: .behavior) {
+          let variables = try? values.decode(JSON.self, forKey: .variables)
+          self = .requestCallback(
+            requestId: requestId,
+            name: name,
+            behavior: behavior,
+            variables: variables
+          )
+          return
+        }
+      case .hapticFeedback:
+        if let hapticType = try? values.decode(String.self, forKey: .hapticType) {
+          self = .hapticFeedback(hapticType: hapticType)
+          return
+        }
+      case .pageView:
+        if let data = try? PageViewData(from: decoder) {
+          self = .pageView(data)
+          return
+        }
+      }
+    }
+
+    throw PaywallMessageError.decoding("Whoops! \(dump(values))")
+  }
+}

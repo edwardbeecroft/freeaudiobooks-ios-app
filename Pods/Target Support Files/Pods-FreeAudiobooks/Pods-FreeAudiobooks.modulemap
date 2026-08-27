@@ -1,0 +1,6 @@
+framework module Pods_FreeAudiobooks {
+  umbrella header "Pods-FreeAudiobooks-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,0 +1,691 @@
+//
+//  File.swift
+//
+//
+//  Created by Yusuf Tör on 23/12/2022.
+//
+// swiftlint:disable function_body_length file_length
+
+import UIKit
+import Combine
+
+/// Contains all of the SDK's core utility objects that are normally directly injected as dependencies.
+///
+/// This conforms to protocol factory methods which can be used to make objects that have
+/// dependencies injected into them.
+///
+/// Objects only need `unowned` references to the dependencies injected into them because
+/// `DependencyContainer` is owned by the `Superwall` class.
+final class DependencyContainer {
+  // swiftlint:disable implicitly_unwrapped_optional
+  var configManager: ConfigManager!
+  var identityManager: IdentityManager!
+  var storeKitManager: StoreKitManager!
+  var appSessionManager: AppSessionManager!
+  var storage: Storage!
+  var network: Network!
+  var paywallManager: PaywallManager!
+  var paywallRequestManager: PaywallRequestManager!
+  var deviceHelper: DeviceHelper!
+  var placementsQueue: PlacementsQueue!
+  var debugManager: DebugManager!
+  var api: Api!
+  var transactionManager: TransactionManager!
+  var delegateAdapter: SuperwallDelegateAdapter!
+  var purchaseManager: PurchaseManager!
+  var receiptManager: ReceiptManager!
+  var purchaseController: PurchaseController!
+  var productsManager: ProductsManager!
+  var entitlementsInfo: EntitlementsInfo!
+  var attributionPoster: AttributionPoster!
+  var mmpAttributionManager: MMPAttributionManager!
+  var webEntitlementRedeemer: WebEntitlementRedeemer!
+  var deepLinkRouter: DeepLinkRouter!
+  var attributionFetcher: AttributionFetcher!
+  var testModeManager: TestModeManager!
+  let permissionHandler = PermissionHandler()
+  let customCallbackRegistry = CustomCallbackRegistry()
+  // swiftlint:enable implicitly_unwrapped_optional
+  let paywallArchiveManager = PaywallArchiveManager()
+
+  init(
+    apiKey: String = "",
+    purchaseController controller: PurchaseController? = nil,
+    options: SuperwallOptions? = nil
+  ) {
+    delegateAdapter = SuperwallDelegateAdapter()
+    storage = Storage(factory: self)
+    storage.configure(apiKey: apiKey)
+    entitlementsInfo = EntitlementsInfo(
+      storage: storage,
+      delegateAdapter: delegateAdapter
+    )
+    let options = options ?? SuperwallOptions()
+
+    // In test environments, always bypass the app transaction check
+    if TestModeManager.isTestEnvironment {
+      options.shouldBypassAppTransactionCheck = true
+    }
+
+    productsManager = ProductsManager(
+      entitlementsInfo: entitlementsInfo,
+      storeKitVersion: options.storeKitVersion
+    )
+    network = Network(
+      options: options,
+      factory: self
+    )
+    storeKitManager = StoreKitManager(productsManager: productsManager)
+
+    purchaseController = controller ?? AutomaticPurchaseController(factory: self, entitlementsInfo: entitlementsInfo)
+
+    receiptManager = ReceiptManager(
+      storeKitVersion: options.storeKitVersion,
+      shouldBypassAppTransactionCheck: options.shouldBypassAppTransactionCheck,
+      productsManager: productsManager,
+      receiptDelegate: purchaseController as? ReceiptDelegate,
+      factory: self,
+      storage: storage
+    )
+
+    webEntitlementRedeemer = WebEntitlementRedeemer(
+      network: network,
+      storage: storage,
+      entitlementsInfo: entitlementsInfo,
+      delegate: delegateAdapter,
+      purchaseController: purchaseController,
+      receiptManager: receiptManager,
+      factory: self
+    )
+
+    paywallRequestManager = PaywallRequestManager(
+      storeKitManager: storeKitManager,
+      network: network,
+      factory: self
+    )
+    paywallManager = PaywallManager(
+      factory: self,
+      paywallRequestManager: paywallRequestManager
+    )
+
+    api = Api(networkEnvironment: options.networkEnvironment)
+
+    deviceHelper = DeviceHelper(
+      api: api,
+      storage: storage,
+      network: network,
+      entitlementsInfo: entitlementsInfo,
+      receiptManager: receiptManager,
+      factory: self
+    )
+
+    configManager = ConfigManager(
+      options: options,
+      storeKitManager: storeKitManager,
+      storage: storage,
+      network: network,
+      paywallManager: paywallManager,
+      deviceHelper: deviceHelper,
+      entitlementsInfo: entitlementsInfo,
+      webEntitlementRedeemer: webEntitlementRedeemer,
+      factory: self
+    )
+
+    attributionFetcher = AttributionFetcher(
+      storage: storage,
+      deviceHelper: deviceHelper,
+      webEntitlementRedeemer: webEntitlementRedeemer
+    )
+
+    attributionPoster = AttributionPoster(
+      storage: storage,
+      network: network,
+      configManager: configManager,
+      attributionFetcher: attributionFetcher
+    )
+
+    placementsQueue = PlacementsQueue(
+      network: network,
+      configManager: configManager
+    )
+
+    identityManager = IdentityManager(
+      deviceHelper: deviceHelper,
+      storage: storage,
+      configManager: configManager,
+      webEntitlementRedeemer: webEntitlementRedeemer
+    ) { [weak self] newAttributes in
+      Task { @MainActor in
+        self?.delegateAdapter.userAttributesDidChange(newAttributes: newAttributes)
+      }
+    }
+
+    // Created after `identityManager` since it reads the current user's
+    // attributes when merging install-attribution results.
+    mmpAttributionManager = MMPAttributionManager(
+      network: network,
+      storage: storage,
+      identityManager: identityManager
+    )
+
+    testModeManager = TestModeManager(
+      identityManager: identityManager,
+      deviceHelper: deviceHelper,
+      storage: storage
+    )
+
+    deviceHelper.testModeManager = testModeManager
+
+    appSessionManager = AppSessionManager(
+      configManager: configManager,
+      identityManager: identityManager,
+      storage: storage,
+      delegate: self
+    )
+
+    debugManager = DebugManager(
+      storage: storage,
+      factory: self
+    )
+    deepLinkRouter = DeepLinkRouter(
+      webEntitlementRedeemer: webEntitlementRedeemer,
+      debugManager: debugManager,
+      configManager: configManager
+    )
+    purchaseManager = PurchaseManager(
+      storeKitVersion: options.storeKitVersion,
+      storeKitManager: storeKitManager,
+      receiptManager: receiptManager,
+      identityManager: identityManager,
+      storage: storage,
+      factory: self
+    )
+
+    transactionManager = TransactionManager(
+      storeKitManager: storeKitManager,
+      receiptManager: receiptManager,
+      purchaseController: purchaseController,
+      placementsQueue: placementsQueue,
+      purchaseManager: purchaseManager,
+      productsManager: productsManager,
+      factory: self
+    )
+  }
+}
+
+// MARK: - IdentityFactory
+extension DependencyContainer: IdentityFactory {
+  func makeIdentityInfo() -> IdentityInfo {
+    return IdentityInfo(
+      aliasId: identityManager.aliasId,
+      appUserId: identityManager.appUserId
+    )
+  }
+
+  func makeIdentityManager() -> IdentityManager {
+    return identityManager
+  }
+}
+
+extension DependencyContainer: TransactionManagerFactory {
+  func makeTransactionManager() -> TransactionManager {
+    return transactionManager
+  }
+}
+
+// MARK: - TestModeManagerFactory
+extension DependencyContainer: TestModeManagerFactory {
+  func makeTestModeManager() -> TestModeManager {
+    return testModeManager
+  }
+}
+
+// MARK: - CacheFactory
+extension DependencyContainer: CacheFactory {
+  func makeCache() -> PaywallViewControllerCache {
+    return PaywallViewControllerCache(deviceLocaleString: deviceHelper.localeIdentifier)
+  }
+}
+
+// MARK: - PaywallArchiveManagerFactory
+extension DependencyContainer: PaywallArchiveManagerFactory {
+  func makePaywallArchiveManager() -> PaywallArchiveManager {
+    return paywallArchiveManager
+  }
+}
+
+// MARK: - DeviceInfofactory
+extension DependencyContainer: DeviceHelperFactory {
+  func makeDeviceInfo() -> DeviceInfo {
+    return DeviceInfo(
+      appInstalledAtString: deviceHelper.appInstalledAtString,
+      locale: deviceHelper.localeIdentifier
+    )
+  }
+
+  func makeIsSandbox() -> Bool {
+    if testModeManager.isTestMode {
+      return true
+    }
+    return deviceHelper.isSandbox == "true"
+  }
+
+  func makeSessionDeviceAttributes() async -> [String: Any] {
+    var attributes = await deviceHelper.getTemplateDevice()
+    attributes["utcDate"] = nil
+    attributes["localDate"] = nil
+    attributes["localDate"] = nil
+    attributes["localTime"] = nil
+    attributes["utcTime"] = nil
+    attributes["utcDateTime"] = nil
+    attributes["localDateTime"] = nil
+
+    return attributes
+  }
+}
+
+// MARK: - DeviceInfofactory
+extension DependencyContainer: LocaleIdentifierFactory {
+  func makeLocaleIdentifier() -> String? {
+    return configManager.options.localeIdentifier
+  }
+}
+
+// MARK: - ViewControllerFactory
+extension DependencyContainer: ViewControllerFactory {
+  @MainActor
+  func makePaywallViewController(
+    for paywall: Paywall,
+    withCache cache: PaywallViewControllerCache?,
+    withPaywallArchiveManager archiveManager: PaywallArchiveManager?,
+    delegate: PaywallViewControllerDelegateAdapter?
+  ) -> PaywallViewController {
+    let messageHandler = PaywallMessageHandler(
+      receiptManager: receiptManager,
+      factory: self,
+      permissionHandler: permissionHandler,
+      customCallbackRegistry: customCallbackRegistry
+    )
+    let webView = SWWebView(
+      isMac: deviceHelper.isMac,
+      messageHandler: messageHandler,
+      isOnDeviceCacheEnabled: paywall.onDeviceCache == .enabled,
+      factory: self
+    )
+    let paywallViewController = PaywallViewController(
+      paywall: paywall,
+      eventDelegate: Superwall.shared,
+      delegate: delegate,
+      deviceHelper: deviceHelper,
+      factory: self,
+      storage: storage,
+      network: network,
+      webView: webView,
+      webEntitlementRedeemer: webEntitlementRedeemer,
+      cache: cache,
+      paywallArchiveManager: paywallArchiveManager,
+      customCallbackRegistry: customCallbackRegistry
+    )
+
+    webView.delegate = paywallViewController
+    messageHandler.delegate = paywallViewController
+
+    return paywallViewController
+  }
+
+  @MainActor
+  func makeDebugViewController(withDatabaseId id: String?) -> DebugViewController {
+    let viewController = DebugViewController(
+      storeKitManager: storeKitManager,
+      network: network,
+      paywallRequestManager: paywallRequestManager,
+      paywallManager: paywallManager,
+      debugManager: debugManager,
+      factory: self
+    )
+    viewController.paywallDatabaseId = id
+    viewController.modalPresentationStyle = .overFullScreen
+    return viewController
+  }
+}
+
+extension DependencyContainer: VariablesFactory {
+  func makeJsonVariables(
+    products: [ProductVariable]?,
+    computedPropertyRequests: [ComputedPropertyRequest],
+    placement: PlacementData?
+  ) async -> JSON {
+    let templateDeviceDict = await deviceHelper.getDeviceAttributes(
+      since: placement,
+      computedPropertyRequests: computedPropertyRequests
+    )
+
+    return Variables(
+      products: products,
+      params: placement?.parameters,
+      userAttributes: identityManager.userAttributes,
+      templateDeviceDictionary: templateDeviceDict
+    ).templated()
+  }
+}
+
+// MARK: - PaywallRequestFactory
+extension DependencyContainer: RequestFactory {
+  func makePaywallRequest(
+    placementData: PlacementData? = nil,
+    responseIdentifiers: ResponseIdentifiers,
+    overrides: PaywallRequest.Overrides? = nil,
+    isDebuggerLaunched: Bool,
+    presentationSourceType: String?
+  ) -> PaywallRequest {
+    return PaywallRequest(
+      placementData: placementData,
+      responseIdentifiers: responseIdentifiers,
+      overrides: overrides ?? PaywallRequest.Overrides(),
+      isDebuggerLaunched: isDebuggerLaunched,
+      presentationSourceType: presentationSourceType,
+      retryCount: 6
+    )
+  }
+
+  func makePresentationRequest(
+    _ presentationInfo: PresentationInfo,
+    paywallOverrides: PaywallOverrides? = nil,
+    presenter: UIViewController? = nil,
+    isDebuggerLaunched: Bool? = nil,
+    isPaywallPresented: Bool,
+    type: PresentationRequestType
+  ) -> PresentationRequest {
+    return PresentationRequest(
+      presentationInfo: presentationInfo,
+      presenter: presenter,
+      paywallOverrides: paywallOverrides,
+      flags: .init(
+        isDebuggerLaunched: isDebuggerLaunched ?? debugManager.isDebuggerLaunched,
+        subscriptionStatus: Superwall.shared.$subscriptionStatus.eraseToAnyPublisher(),
+        isPaywallPresented: isPaywallPresented,
+        type: type
+      )
+    )
+  }
+}
+
+// MARK: - ApiFactory
+extension DependencyContainer: ApiFactory {
+  func makeHeaders(
+    fromRequest request: URLRequest,
+    isForDebugging: Bool,
+    requestId: String
+  ) async -> [String: String] {
+    let key = isForDebugging ? storage.debugKey : storage.apiKey
+    let auth = "Bearer \(key)"
+    let headers = [
+      "Authorization": auth,
+      "X-Platform": "iOS",
+      "X-Platform-Environment": "SDK",
+      "X-Platform-Wrapper": deviceHelper.platformWrapper ?? "",
+      "X-App-User-ID": identityManager.appUserId ?? "",
+      "X-Alias-ID": identityManager.aliasId,
+      "X-URL-Scheme": deviceHelper.urlScheme,
+      "X-Vendor-ID": deviceHelper.vendorId,
+      "X-App-Version": deviceHelper.appVersion,
+      "X-OS-Version": deviceHelper.osVersion,
+      "X-Device-Model": deviceHelper.model,
+      "X-Device-Locale": deviceHelper.localeIdentifier,
+      "X-Device-Language-Code": deviceHelper.languageCode,
+      "X-Device-Currency-Code": deviceHelper.currencyCode,
+      "X-Device-Currency-Symbol": deviceHelper.currencySymbol,
+      "X-Device-Timezone-Offset": deviceHelper.secondsFromGMT,
+      "X-App-Install-Date": deviceHelper.appInstalledAtString,
+      "X-Radio-Type": deviceHelper.radioType,
+      "X-Device-Interface-Style": deviceHelper.interfaceStyle,
+      "X-SDK-Version": sdkVersion,
+      "X-Request-Id": requestId,
+      "X-Bundle-ID": deviceHelper.bundleId,
+      "X-Low-Power-Mode": deviceHelper.isLowPowerModeEnabled,
+      "X-Is-Sandbox": deviceHelper.isSandbox,
+      "X-Static-Config-Build-Id": configManager.config?.buildId ?? "",
+      "X-Current-Time": Date().isoString,
+      "X-Retry-Count": "\(configManager.configRetryCount)",
+      "X-Entitlements": entitlementsInfo.active.map { $0.id }.joined(separator: ","),
+      "Content-Type": "application/json"
+    ]
+    return headers
+  }
+
+  func makeDefaultComponents(host: EndpointHost) -> ApiHostConfig {
+    return api.getConfig(host: host)
+  }
+}
+
+// MARK: - Audience Filter Params
+extension DependencyContainer: AudienceFilterAttributesFactory {
+  func makeAudienceFilterAttributes(
+    forPlacement placement: PlacementData?,
+    withComputedProperties computedPropertyRequests: [ComputedPropertyRequest]
+  ) async -> [String: Any] {
+    var userAttributes = identityManager.userAttributes
+    userAttributes["isLoggedIn"] = identityManager.isLoggedIn
+
+    let deviceAttributes = await deviceHelper.getDeviceAttributes(
+      since: placement,
+      computedPropertyRequests: computedPropertyRequests
+    )
+    return [
+      "user": userAttributes,
+      "device": deviceAttributes,
+      "params": placement?.parameters.dictionaryObject ?? ""
+    ]
+  }
+}
+
+// MARK: - ConfigManagerFactory
+extension DependencyContainer: ConfigManagerFactory {
+  /// Gets the paywall response from the static config, if the device locale starts with "en" and no more specific version can be found.
+  func makeStaticPaywall(
+    withId paywallId: String?,
+    isDebuggerLaunched: Bool
+  ) -> Paywall? {
+    if isDebuggerLaunched {
+      return nil
+    }
+    let deviceInfo = makeDeviceInfo()
+    return ConfigLogic.getStaticPaywall(
+      withId: paywallId,
+      config: configManager.config,
+      deviceLocale: deviceInfo.locale
+    )
+  }
+}
+
+// MARK: - StoreTransactionFactory
+extension DependencyContainer: StoreTransactionFactory {
+  func makeStoreTransaction(from transaction: SK1Transaction) async -> StoreTransaction {
+    return StoreTransaction(
+      transaction: SK1StoreTransaction(transaction: transaction),
+      configRequestId: configManager.config?.requestId ?? "",
+      appSessionId: appSessionManager.appSession.id
+    )
+  }
+
+  @available(iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+  func makeStoreTransaction(from transaction: SK2Transaction) async -> StoreTransaction {
+    return StoreTransaction(
+      transaction: SK2StoreTransaction(transaction: transaction),
+      configRequestId: configManager.config?.requestId ?? "",
+      appSessionId: appSessionManager.appSession.id
+    )
+  }
+
+  func makeStoreTransaction(from transaction: CustomStoreTransaction) async -> StoreTransaction {
+    return StoreTransaction(
+      transaction: transaction,
+      configRequestId: configManager.config?.requestId ?? "",
+      appSessionId: appSessionManager.appSession.id
+    )
+  }
+}
+
+// MARK: - Options Factory
+extension DependencyContainer: OptionsFactory {
+  func makeSuperwallOptions() -> SuperwallOptions {
+    return configManager.options
+  }
+}
+
+// MARK: - Triggers Factory
+extension DependencyContainer: TriggerFactory {
+  func makeTriggers() -> Set<String> {
+    return Set(configManager.triggersByPlacementName.keys)
+  }
+}
+
+// MARK: - Purchase Controller Factory
+extension DependencyContainer: HasExternalPurchaseControllerFactory {
+  func makeHasExternalPurchaseController() -> Bool {
+    return purchaseController.isInternal == false
+  }
+
+  func makeExternalPurchaseController() -> any PurchaseController {
+    return purchaseController
+  }
+}
+
+// MARK: - Feature Flags Factory
+extension DependencyContainer: FeatureFlagsFactory {
+  func makeFeatureFlags() -> FeatureFlags? {
+    return configManager.config?.featureFlags
+  }
+}
+
+// MARK: - Computed Property Requests Factory
+extension DependencyContainer: ComputedPropertyRequestsFactory {
+  func makeComputedPropertyRequests() -> [ComputedPropertyRequest] {
+    return configManager.config?.allComputedProperties ?? []
+  }
+}
+
+// MARK: - Purchased Transactions Factory
+extension DependencyContainer: PurchasedTransactionsFactory {
+  func makePurchasingCoordinator() -> PurchasingCoordinator {
+    return purchaseManager.coordinator
+  }
+
+  func purchase(product: StoreProduct) async -> PurchaseResult {
+    return await purchaseManager.purchase(product: product)
+  }
+
+  func restorePurchases() async -> RestorationResult {
+    return await purchaseManager.restorePurchases()
+  }
+}
+
+// MARK: - User Attributes Placement Factory
+extension DependencyContainer: UserAttributesPlacementFactory {
+  func makeUserAttributesPlacement() -> InternalSuperwallEvent.UserAttributes {
+    return InternalSuperwallEvent.UserAttributes(
+      appInstalledAtString: deviceHelper.appInstalledAtString,
+      audienceFilterParams: identityManager.userAttributes
+    )
+  }
+}
+
+// MARK: - Receipt Factory
+extension DependencyContainer: ReceiptFactory {
+  func loadPurchasedProducts(config: Config? = nil) async {
+    await receiptManager.loadPurchasedProducts(config: config)
+  }
+
+  func refreshSK1Receipt() async {
+    return await receiptManager.refreshSK1Receipt()
+  }
+
+  func isFreeTrialAvailable(for product: StoreProduct) async -> Bool {
+    // Check test mode override first
+    if testModeManager.isTestMode {
+      switch testModeManager.freeTrialOverride {
+      case .useDefault:
+        break
+      case .forceAvailable:
+        return true
+      case .forceUnavailable:
+        return false
+      }
+    }
+    return await receiptManager.isFreeTrialAvailable(for: product)
+  }
+
+  var isTestMode: Bool {
+    testModeManager.isTestMode
+  }
+
+  var testModeFreeTrialOverride: FreeTrialOverride {
+    testModeManager.freeTrialOverride
+  }
+}
+
+// MARK: - Config Attributes Factory
+extension DependencyContainer: ConfigAttributesFactory {
+  func makeConfigAttributes() -> InternalSuperwallEvent.ConfigAttributes {
+    let hasSwiftDelegate = delegateAdapter.swiftDelegate != nil
+    let hasObjcDelegate = delegateAdapter.objcDelegate != nil
+
+    return InternalSuperwallEvent.ConfigAttributes(
+      options: configManager.options,
+      hasExternalPurchaseController: purchaseController.isInternal == false,
+      hasDelegate: hasSwiftDelegate || hasObjcDelegate
+    )
+  }
+}
+
+// MARK: WebEntitlementFactory
+extension DependencyContainer: WebEntitlementFactory {
+  /// Properties like `deviceHelper` are implicitly unwrapped optionals set after
+  /// init. Tests create a bare `DependencyContainer` without fully configuring it,
+  /// so background tasks in `WebEntitlementRedeemer` must check this before
+  /// accessing factory methods to avoid a nil dereference.
+  func makeIsContainerReady() -> Bool {
+    return configManager != nil
+  }
+
+  func makeDeviceId() -> String {
+    return "$SuperwallDevice:\(deviceHelper.vendorId)"
+  }
+
+  func makeAppUserId() -> String? {
+    return identityManager.appUserId
+  }
+
+  func makeAliasId() -> String {
+    return identityManager.aliasId
+  }
+
+  func makeEntitlementsMaxAge() -> Seconds? {
+    return configManager.config?.web2appConfig?.entitlementsMaxAge
+  }
+
+  func makeHasConfig() -> Bool {
+    return configManager.config != nil
+  }
+}
+
+// MARK: - RestoreAccessFactory
+extension DependencyContainer: RestoreAccessFactory {
+  func makeRestoreAccessURL() -> URL? {
+    return configManager.config?.web2appConfig?.restoreAccessURL
+  }
+}
+
+// MARK: - ConfigStateFactory
+extension DependencyContainer: ConfigStateFactory {
+  func makeConfigState() -> CurrentValueSubject<ConfigState, any Error> {
+    return configManager.configState
+  }
+}
+
+// MARK: - AppIdFactory
+extension DependencyContainer: AppIdFactory {
+  func makeAppId() -> String? {
+    return configManager.config?.iosAppId
+  }
+}

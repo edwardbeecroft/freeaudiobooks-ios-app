@@ -1,0 +1,774 @@
+//
+//  EventHandler.swift
+//  Superwall
+//
+//  Created by Yusuf Tör on 04/03/2022.
+//
+// swiftlint:disable function_body_length type_body_length file_length
+
+import UIKit
+import WebKit
+
+protocol PaywallMessageHandlerDelegate: AnyObject {
+  var request: PresentationRequest? { get }
+  var paywall: Paywall { get set }
+  var info: PaywallInfo { get }
+  var webView: SWWebView { get }
+  var loadingState: PaywallLoadingState { get set }
+  var isActive: Bool { get }
+
+  func eventDidOccur(_ paywallWebEvent: PaywallWebEvent)
+  func openDeepLink(_ url: URL, shouldDismiss: Bool)
+  func presentSafariInApp(_ url: URL)
+  func presentSafariExternal(_ url: URL)
+  func requestReview(type: ReviewType)
+  func openPaymentSheet(_ url: URL)
+  func handleStripeCheckoutSubmit(checkoutContextId: String, productId: String)
+  func handleStripeCheckoutComplete(
+    checkoutContextId: String,
+    productId: String
+  )
+  func handleStripeCheckoutAbandon(checkoutContextId: String, productId: String)
+  func revealWebViewBehindSpinner()
+}
+
+@MainActor
+final class PaywallMessageHandler: WebEventDelegate {
+  weak var delegate: PaywallMessageHandlerDelegate?
+  private unowned let receiptManager: ReceiptManager
+  private let factory: VariablesFactory
+  private let permissionHandler: PermissionHandling
+  private let customCallbackRegistry: CustomCallbackRegistry
+
+  struct EnqueuedMessage {
+    let name: String
+    let paywall: Paywall
+  }
+  /// Used to enqueue `paywall_open` messages if the paywall isn't ready to receive them yet.
+  private var messageQueue: Queue<EnqueuedMessage> = Queue()
+
+  init(
+    receiptManager: ReceiptManager,
+    factory: VariablesFactory,
+    permissionHandler: PermissionHandling,
+    customCallbackRegistry: CustomCallbackRegistry
+  ) {
+    self.receiptManager = receiptManager
+    self.factory = factory
+    self.permissionHandler = permissionHandler
+    self.customCallbackRegistry = customCallbackRegistry
+  }
+
+  func handle(_ message: PaywallMessage) {
+    Logger.debug(
+      logLevel: .debug,
+      scope: .paywallViewController,
+      message: "Handle Message",
+      info: ["message": message]
+    )
+    guard let paywall = delegate?.paywall else {
+      return
+    }
+
+    switch message {
+    case .templateParamsAndUserAttributes:
+      Task {
+        await self.passTemplatesToWebView(from: paywall)
+      }
+    case .onReady(let paywalljsVersion):
+      delegate?.paywall.paywalljsVersion = paywalljsVersion
+      let loadedAt = Date()
+      Task {
+        await self.didLoadWebView(for: paywall, at: loadedAt)
+      }
+    case .close:
+      hapticFeedback()
+      delegate?.eventDidOccur(.closed)
+    case .paywallOpen:
+      let paywallOpen = SuperwallEventObjc.paywallOpen.description
+      if delegate?.paywall.paywalljsVersion == nil {
+        let message = EnqueuedMessage(
+          name: paywallOpen,
+          paywall: paywall
+        )
+        messageQueue.enqueue(message)
+      } else {
+        Task {
+          await self.pass(placement: paywallOpen, from: paywall)
+        }
+      }
+    case .paywallClose:
+      let paywallClose = SuperwallEventObjc.paywallClose.description
+      if delegate?.paywall.paywalljsVersion == nil {
+        let message = EnqueuedMessage(
+          name: paywallClose,
+          paywall: paywall
+        )
+        messageQueue.enqueue(message)
+      } else {
+        Task {
+          await self.pass(placement: paywallClose, from: paywall)
+        }
+      }
+    case .restoreStart:
+      let restoreStart = SuperwallEventObjc.restoreStart.description
+      Task {
+        await self.pass(placement: restoreStart, from: paywall)
+      }
+    case .restoreComplete:
+      let restoreComplete = SuperwallEventObjc.restoreComplete.description
+      Task {
+        await self.pass(placement: restoreComplete, from: paywall)
+      }
+    case .restoreFail:
+      let restoreFail = SuperwallEventObjc.restoreFail.description
+      Task {
+        await self.pass(placement: restoreFail, from: paywall)
+      }
+    case .transactionRestore:
+      let transactionRestore = SuperwallEventObjc.transactionRestore.description
+      Task {
+        await self.pass(placement: transactionRestore, from: paywall)
+      }
+    case .transactionStart:
+      let transactionStart = SuperwallEventObjc.transactionStart.description
+      Task {
+        await self.pass(placement: transactionStart, from: paywall)
+      }
+    case let .transactionComplete(trialEndDate, productIdentifier):
+      Task {
+        // Send transaction_complete to trigger post-purchase actions
+        let transactionComplete = SuperwallEventObjc.transactionComplete.description
+        await self.pass(
+          placement: transactionComplete,
+          from: paywall,
+          payload: ["product_identifier": productIdentifier]
+        )
+
+        // Send freeTrial_start for notification scheduling
+        let freeTrialStart = SuperwallEventObjc.freeTrialStart.description
+        var freeTrialPayload: [String: Any] = ["product_identifier": productIdentifier]
+        if let trialEndDate {
+          freeTrialPayload["trial_end_date"] = Int(trialEndDate.timeIntervalSince1970 * 1000)
+        }
+        await self.pass(
+          placement: freeTrialStart,
+          from: paywall,
+          payload: freeTrialPayload
+        )
+      }
+    case .transactionFail:
+      let transactionFail = SuperwallEventObjc.transactionFail.description
+      Task {
+        await self.pass(placement: transactionFail, from: paywall)
+      }
+    case .transactionAbandon:
+      let transactionAbandon = SuperwallEventObjc.transactionAbandon.description
+      Task {
+        await self.pass(placement: transactionAbandon, from: paywall)
+      }
+    case .transactionTimeout:
+      let transactionTimeout = SuperwallEventObjc.transactionTimeout.description
+      Task {
+        await self.pass(placement: transactionTimeout, from: paywall)
+      }
+    case .openUrl(let url):
+      openUrl(url)
+    case .openUrlInSafari(let url):
+      openUrlInSafari(url)
+    case .openPaymentSheet(let url):
+      openPaymentSheet(url)
+    case .openDeepLink(let url):
+      openDeepLink(url)
+    case .restore:
+      restorePurchases()
+    case let .purchase(productId: id, shouldDismiss: shouldDismiss):
+      purchaseProduct(withId: id, shouldDismiss: shouldDismiss)
+    case .custom(data: let name):
+      handleCustomEvent(name)
+    case let .customPlacement(name: name, params: params):
+      handleCustomPlacement(name: name, params: params)
+    case let .userAttributesUpdated(attributes: attributes):
+      handleUserAttributesUpdated(attributes: attributes)
+    case .initiateWebCheckout:
+      // No-op: This is only here for backwards compatibility so that we don't log
+      // and error when decoding the message.
+      break
+    case let .stripeCheckoutStart(_, productId):
+      trackStripeCheckoutEvent(
+        state: .start,
+        productId: productId
+      )
+    case let .stripeCheckoutComplete(checkoutContextId, productId):
+      trackStripeCheckoutEvent(
+        state: .complete,
+        productId: productId
+      )
+      delegate?.handleStripeCheckoutComplete(
+        checkoutContextId: checkoutContextId,
+        productId: productId
+      )
+    case let .stripeCheckoutSubmit(checkoutContextId, productId):
+      trackStripeCheckoutEvent(
+        state: .submit,
+        productId: productId
+      )
+      delegate?.handleStripeCheckoutSubmit(
+        checkoutContextId: checkoutContextId,
+        productId: productId
+      )
+    case let .stripeCheckoutFail(_, productId):
+      trackStripeCheckoutEvent(
+        state: .fail,
+        productId: productId
+      )
+    // No-op: don't clear checkout context on failure
+    case let .stripeCheckoutAbandon(checkoutContextId, productId):
+      delegate?.handleStripeCheckoutAbandon(
+        checkoutContextId: checkoutContextId,
+        productId: productId
+      )
+    case .requestStoreReview(let reviewType):
+      requestReview(type: reviewType)
+    case let .scheduleNotification(type, title, subtitle, body, delay):
+      let notification = LocalNotification(
+        type: type,
+        title: title,
+        subtitle: subtitle,
+        body: body,
+        delay: delay
+      )
+      delegate?.eventDidOccur(.scheduleNotification(notification: notification))
+    case let .requestPermission(permissionType, requestId):
+      handleRequestPermission(
+        permissionType: permissionType,
+        requestId: requestId,
+        paywall: paywall
+      )
+    case let .requestCallback(requestId, name, behavior, variables):
+      handleRequestCallback(
+        requestId: requestId,
+        name: name,
+        behavior: behavior,
+        variables: variables,
+        paywall: paywall
+      )
+    case .hapticFeedback(let hapticType):
+      triggerHapticFeedback(hapticType)
+    case .pageView(let data):
+      guard let delegate = delegate else { return }
+      let paywallInfo = delegate.info
+      Task {
+        let event = InternalSuperwallEvent.PaywallPageView(
+          paywallInfo: paywallInfo,
+          data: data
+        )
+        await Superwall.shared.track(event)
+      }
+    }
+  }
+
+  nonisolated private func pass(
+    placement: String,
+    from paywall: Paywall,
+    payload: [String: Any] = [:]
+  ) async {
+    var event: [String: Any] = [
+      "event_name": placement,
+      "paywall_id": paywall.databaseId,
+      "paywall_identifier": paywall.identifier
+    ]
+    event.merge(payload) { _, new in new }
+
+    guard let jsonData = try? JSONSerialization.data(withJSONObject: [event]) else {
+      return
+    }
+    let base64Event = jsonData.base64EncodedString()
+    await passMessageToWebView(base64Event)
+  }
+
+  /// Passes the templated variables and params to the webview.
+  ///
+  /// This is called every paywall open incase variables like user attributes have changed.
+  nonisolated private func passTemplatesToWebView(from paywall: Paywall) async {
+    let eventData = await delegate?.request?.presentationInfo.placementData
+    let base64Templates = await TemplateLogic.getBase64EncodedTemplates(
+      from: paywall,
+      placement: eventData,
+      receiptManager: receiptManager,
+      factory: factory
+    )
+    await passMessageToWebView(base64Templates)
+  }
+
+  func passEventTrackingBehaviorToWebView(_ behavior: EventTrackingBehavior) {
+    let event: [String: Any] = [
+      "event_name": "event_tracking_behavior",
+      "behavior": behavior.description
+    ]
+    guard let jsonData = try? JSONSerialization.data(withJSONObject: [event]) else {
+      return
+    }
+    passMessageToWebView(jsonData.base64EncodedString())
+  }
+
+  private func passMessageToWebView(_ base64String: String) {
+    let messageScript = """
+      window.paywall.accept64('\(base64String)');
+      """
+
+    Logger.debug(
+      logLevel: .debug,
+      scope: .paywallViewController,
+      message: "Posting Message",
+      info: ["message": messageScript]
+    )
+
+    delegate?.webView.evaluateJavaScript(messageScript) { _, error in
+      if let error = error {
+        Logger.debug(
+          logLevel: .error,
+          scope: .paywallViewController,
+          message: "Error Evaluating JS",
+          info: ["message": messageScript],
+          error: error
+        )
+      }
+    }
+  }
+
+  func getState() async -> [String: Any] {
+    let messageScript = """
+      window.app.getAllState();
+      """
+
+    Logger.debug(
+      logLevel: .debug,
+      scope: .paywallViewController,
+      message: "Getting state",
+      info: ["message": messageScript]
+    )
+
+    do {
+      let result = try await delegate?.webView.evaluateJavaScript(messageScript) as? [String: Any]
+      return result ?? [:]
+    } catch {
+      Logger.debug(
+        logLevel: .debug,
+        scope: .paywallViewController,
+        message: "Error Evaluating JS",
+        info: ["message": messageScript],
+        error: error
+      )
+      return [:]
+    }
+  }
+
+  /// Passes in the HTML substitutions, templates and other scripts to make the webview
+  /// feel native.
+  nonisolated private func didLoadWebView(
+    for paywall: Paywall,
+    at loadedAt: Date
+  ) async {
+    Task(priority: .utility) {
+      guard let delegate = await self.delegate else {
+        return
+      }
+
+      delegate.paywall.webviewLoadingInfo.endAt = loadedAt
+
+      let paywallInfo = delegate.info
+      let webViewLoad = InternalSuperwallEvent.PaywallWebviewLoad(
+        state: .complete,
+        paywallInfo: paywallInfo
+      )
+      await Superwall.shared.track(webViewLoad)
+
+      let behavior = await Superwall.shared.eventTrackingBehavior
+      await self.passEventTrackingBehaviorToWebView(behavior)
+    }
+
+    let htmlSubstitutions = paywall.htmlSubstitutions
+    let placementData = await delegate?.request?.presentationInfo.placementData
+    let templates = await TemplateLogic.getBase64EncodedTemplates(
+      from: paywall,
+      placement: placementData,
+      receiptManager: receiptManager,
+      factory: factory
+    )
+    let scriptSrc = """
+      window.paywall.accept64('\(templates)');
+      window.paywall.accept64('\(htmlSubstitutions)');
+      """
+
+    Logger.debug(
+      logLevel: .debug,
+      scope: .paywallViewController,
+      message: "Posting Message",
+      info: ["message": scriptSrc],
+      error: nil
+    )
+
+    await MainActor.run {
+      delegate?.webView.evaluateJavaScript(scriptSrc) { [weak self] _, error in
+        if let error = error {
+          Logger.debug(
+            logLevel: .error,
+            scope: .paywallViewController,
+            message: "Error Evaluating JS",
+            info: ["message": scriptSrc],
+            error: error
+          )
+        }
+
+        let delay = self?.delegate?.paywall.presentation.delay ?? 0
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delay)) {
+          guard let delegate = self?.delegate else { return }
+          if delegate.loadingState == .manualLoading {
+            // Web content loaded while spinner is showing (e.g. Stripe
+            // recovery poll). Reveal the web view behind the spinner
+            // but keep the spinner visible until the poll finishes.
+            delegate.revealWebViewBehindSpinner()
+          } else {
+            delegate.loadingState = .ready
+          }
+        }
+      }
+
+      // block selection
+      let selectionString =
+        // swiftlint:disable:next line_length
+        "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none} .w-webflow-badge { display: none !important; }'; "
+        + "var head = document.head || document.getElementsByTagName('head')[0]; "
+        + "var style = document.createElement('style'); style.type = 'text/css'; "
+        + "style.appendChild(document.createTextNode(css)); head.appendChild(style); "
+
+      let selectionScript = WKUserScript(
+        source: selectionString,
+        injectionTime: .atDocumentEnd,
+        forMainFrameOnly: true
+      )
+      self.delegate?.webView.configuration.userContentController.addUserScript(selectionScript)
+
+      let preventSelection =
+        // swiftlint:disable:next line_length
+        "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none}'; var head = document.head || document.getElementsByTagName('head')[0]; var style = document.createElement('style'); style.type = 'text/css'; style.appendChild(document.createTextNode(css)); head.appendChild(style);"
+      self.delegate?.webView.evaluateJavaScript(preventSelection)
+
+      let preventZoom =
+        "var meta = document.createElement('meta');" + "meta.name = 'viewport';"
+        + "meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';"
+        + "var head = document.getElementsByTagName('head')[0];" + "head.appendChild(meta);"
+      self.delegate?.webView.evaluateJavaScript(preventZoom)
+
+      while !messageQueue.isEmpty {
+        if let message = messageQueue.dequeue() {
+          Task {
+            await self.pass(
+              placement: message.name,
+              from: message.paywall
+            )
+          }
+        }
+      }
+    }
+  }
+
+  private func openUrl(_ url: URL) {
+    #if os(visionOS)
+      openUrlInSafari(url)
+    #else
+      detectHiddenPaywallEvent(
+        "openUrl",
+        userInfo: ["url": url]
+      )
+      hapticFeedback()
+      delegate?.eventDidOccur(.openedURL(url: url))
+      delegate?.presentSafariInApp(url)
+    #endif
+  }
+
+  private func openUrlInSafari(_ url: URL) {
+    detectHiddenPaywallEvent(
+      "openUrlInSafari",
+      userInfo: ["url": url]
+    )
+    hapticFeedback()
+    delegate?.eventDidOccur(.openedUrlInSafari(url))
+    delegate?.presentSafariExternal(url)
+  }
+
+  private func openPaymentSheet(_ url: URL) {
+    detectHiddenPaywallEvent(
+      "openPaymentSheet",
+      userInfo: ["url": url]
+    )
+    hapticFeedback()
+    delegate?.openPaymentSheet(url)
+  }
+
+  private func openDeepLink(_ url: URL) {
+    detectHiddenPaywallEvent(
+      "openDeepLink",
+      userInfo: ["url": url]
+    )
+    hapticFeedback()
+    // Don't dismiss paywall for redemption links
+    let shouldDismiss = url.redeemableCode == nil
+    delegate?.openDeepLink(url, shouldDismiss: shouldDismiss)
+  }
+
+  private func requestReview(type: ReviewType) {
+    delegate?.requestReview(type: type)
+  }
+
+  private func restorePurchases() {
+    detectHiddenPaywallEvent("restore")
+    hapticFeedback()
+    delegate?.eventDidOccur(.initiateRestore)
+  }
+
+  private func purchaseProduct(
+    withId id: String,
+    shouldDismiss: Bool
+  ) {
+    detectHiddenPaywallEvent("purchase")
+    hapticFeedback()
+    delegate?.eventDidOccur(
+      .initiatePurchase(
+        productId: id,
+        shouldDismiss: shouldDismiss
+      )
+    )
+  }
+
+  private func handleCustomEvent(_ customEvent: String) {
+    detectHiddenPaywallEvent(
+      "custom",
+      userInfo: ["custom_event": customEvent]
+    )
+    delegate?.eventDidOccur(.custom(string: customEvent))
+  }
+
+  private func handleCustomPlacement(name: String, params: JSON) {
+    delegate?.eventDidOccur(.customPlacement(name: name, params: params))
+  }
+
+  private func handleUserAttributesUpdated(attributes: JSON) {
+    delegate?.eventDidOccur(.userAttributesUpdated(attributes: attributes))
+  }
+
+  private func trackStripeCheckoutEvent(
+    state: InternalSuperwallEvent.StripeCheckout.State,
+    productId: String
+  ) {
+    guard let delegate = delegate else { return }
+    let paywallInfo = delegate.info
+    let placementData = delegate.request?.presentationInfo.placementData
+
+    Task {
+      let event = InternalSuperwallEvent.StripeCheckout(
+        state: state,
+        productId: productId,
+        paywallInfo: paywallInfo,
+        placementData: placementData
+      )
+      await Superwall.shared.track(event)
+    }
+  }
+
+  private func detectHiddenPaywallEvent(
+    _ eventName: String,
+    userInfo: [String: Any]? = nil
+  ) {
+    guard delegate?.isActive == false else {
+      return
+    }
+    let paywallDebugDescription = Superwall.shared.paywallViewController.debugDescription
+    var info: [String: Any] = [
+      "self": self,
+      "Superwall.shared.paywallViewController": paywallDebugDescription,
+      "event": eventName
+    ]
+    if let userInfo = userInfo {
+      info = info.merging(userInfo)
+    }
+    Logger.debug(
+      logLevel: .error,
+      scope: .paywallViewController,
+      message: "Received Event on Hidden Superwall",
+      info: info
+    )
+  }
+
+  private func hapticFeedback() {
+    guard Superwall.shared.options.paywalls.isHapticFeedbackEnabled else {
+      return
+    }
+    if Superwall.shared.options.isGameControllerEnabled {
+      return
+    }
+    #if !os(visionOS)
+      UIImpactFeedbackGenerator().impactOccurred(intensity: 0.7)
+    #endif
+  }
+
+  /// Triggers haptic feedback based on the type specified from the paywall editor.
+  private func triggerHapticFeedback(_ hapticType: String) {
+    #if !os(visionOS)
+      switch hapticType {
+      case "light":
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.prepare()
+        generator.impactOccurred()
+      case "medium":
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.prepare()
+        generator.impactOccurred()
+      case "heavy":
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.prepare()
+        generator.impactOccurred()
+      case "success":
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.success)
+      case "warning":
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.warning)
+      case "error":
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.error)
+      case "selection":
+        let generator = UISelectionFeedbackGenerator()
+        generator.prepare()
+        generator.selectionChanged()
+      default:
+        break
+      }
+    #endif
+  }
+
+  // MARK: - Permission Handling
+
+  private func handleRequestPermission(
+    permissionType: PermissionType,
+    requestId: String,
+    paywall: Paywall
+  ) {
+    let permissionName = permissionType.rawValue
+
+    Task {
+      // Track permission requested event
+      let requestedEvent = InternalSuperwallEvent.Permission(
+        state: .requested,
+        permissionName: permissionName,
+        paywallIdentifier: paywall.identifier
+      )
+      await Superwall.shared.track(requestedEvent)
+
+      let status = await permissionHandler.requestPermission(permissionType)
+
+      // Track permission result event
+      let resultState: InternalSuperwallEvent.PermissionState =
+        status == .granted ? .granted : .denied
+      let resultEvent = InternalSuperwallEvent.Permission(
+        state: resultState,
+        permissionName: permissionName,
+        paywallIdentifier: paywall.identifier
+      )
+      await Superwall.shared.track(resultEvent)
+
+      await pass(
+        placement: "permission_result",
+        from: paywall,
+        payload: [
+          "permission_type": permissionType.rawValue,
+          "request_id": requestId,
+          "status": status.rawValue
+        ]
+      )
+    }
+  }
+
+  // MARK: - Custom Callback Handling
+
+  private func handleRequestCallback(
+    requestId: String,
+    name: String,
+    behavior: CustomCallbackBehavior,
+    variables: JSON?,
+    paywall: Paywall
+  ) {
+    let paywallIdentifier = paywall.identifier
+
+    // Emit the event for listeners
+    delegate?.eventDidOccur(
+      .requestCallback(
+        name: name,
+        behavior: behavior,
+        requestId: requestId,
+        variables: variables
+      ))
+
+    Task {
+      let callbackHandler = customCallbackRegistry.getHandler(paywallIdentifier: paywallIdentifier)
+
+      guard let callbackHandler else {
+        // No handler registered, send failure result
+        Logger.debug(
+          logLevel: .debug,
+          scope: .paywallViewController,
+          message: "No custom callback handler registered for paywall",
+          info: ["paywallIdentifier": paywallIdentifier, "callbackName": name]
+        )
+        await sendCallbackResult(
+          requestId: requestId,
+          name: name,
+          status: .failure,
+          data: nil,
+          paywall: paywall
+        )
+        return
+      }
+
+      // Call the registered handler
+      let callback = CustomCallback(name: name, variables: variables?.dictionaryObject)
+      let result = await callbackHandler(callback)
+
+      await sendCallbackResult(
+        requestId: requestId,
+        name: name,
+        status: result.status,
+        data: result.data,
+        paywall: paywall
+      )
+    }
+  }
+
+  nonisolated private func sendCallbackResult(
+    requestId: String,
+    name: String,
+    status: CustomCallbackResultStatus,
+    data: [String: Any]?,
+    paywall: Paywall
+  ) async {
+    var payload: [String: Any] = [
+      "event_name": "callback_result",
+      "request_id": requestId,
+      "name": name,
+      "status": status.rawValue
+    ]
+    if let data {
+      payload["data"] = data
+    }
+
+    guard let jsonData = try? JSONSerialization.data(withJSONObject: [payload]) else {
+      return
+    }
+    let base64Event = jsonData.base64EncodedString()
+    await passMessageToWebView(base64Event)
+  }
+}
