@@ -116,6 +116,7 @@ enum RCKeys: String {
     case onbCredibilityReviewsStarRating
     case onbCredibilityReviewsReviewCount
     case onbCredibilityReviewsTitle
+    case shouldRequestSKReviewInOnboardingAB
     case onbCredibilityReviewsSectionTitleAB
     case onbCredibilityReviewsUserCountAB
     case onbCredibilityReviewsTestimonial1Name

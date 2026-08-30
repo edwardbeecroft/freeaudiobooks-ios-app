@@ -57,7 +57,8 @@ class CredibilityReviewsVC: BaseNewOnboardingVC {
         super.viewDidAppear(animated)
 
         // Only request review once per onboarding session
-        if !coordinator.dataStore.didRequestAppReview {
+        if RCValues.shared.bool(forKey: .shouldRequestSKReviewInOnboardingAB),
+           !coordinator.dataStore.didRequestAppReview {
             coordinator.dataStore.didRequestAppReview = true
             SKReviewManager.requestReview(venue: .onboarding)
         }

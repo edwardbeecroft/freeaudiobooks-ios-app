@@ -180,6 +180,8 @@
 	<string>Listen while I cook, clean, walk the dog—it&apos;s changed how I get through books.</string>
 	<key>onbCredibilityReviewsTitle</key>
 	<string>Give us a rating</string>
+	<key>shouldRequestSKReviewInOnboardingAB</key>
+	<true/>
 	<key>onbCredibilityReviewsUserCountAB</key>
 	<string>500K+ FreeAudiobooks Listeners</string>
 	<key>onbDailyListeningGoalSubtitleAB</key>
