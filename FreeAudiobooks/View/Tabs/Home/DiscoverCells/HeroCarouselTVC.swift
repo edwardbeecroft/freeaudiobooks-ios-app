@@ -55,7 +55,7 @@ private struct HeroCarouselCardLayoutConfig {
     let centeredTextCenterXOffset: CGFloat
 
     var coverWidth: CGFloat {
-        coverHeight * UIConstants.shared.collectionCVCHeightToWidthRatio
+        coverHeight * UIConstants.shared.bookInternalCoverImageWidthToHeightRatio
     }
 }
 
