@@ -687,6 +687,12 @@ private extension LibraryVC {
             AccountManager.shared.user?.savedBookInternalUUIDs.removeAll(where: { $0 == contentUUID })
         } else {
             AccountManager.shared.user?.savedBookInternalUUIDs.append(contentUUID)
+
+            let newSavedCount = AccountManager.shared.user?.totalSavedBooksCount ?? 0
+            let requiredLaunchCount = RCValues.shared.int(forKey: .requiredLaunchCountForSKReview) ?? 2
+            if newSavedCount >= 3 && SKReviewManager.launchCount >= requiredLaunchCount {
+                SKReviewManager.requestReview(venue: .savedBook)
+            }
         }
 
         AccountManager.shared.handleSaveBookInternal(cdBookInternal,
