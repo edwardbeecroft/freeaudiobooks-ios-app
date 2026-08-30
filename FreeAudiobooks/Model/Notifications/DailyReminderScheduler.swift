@@ -37,10 +37,20 @@ class DailyReminderScheduler {
     /// Checks if a daily reminder is currently scheduled
     /// - Parameter completion: Returns true if daily reminder exists in pending requests
     static func hasDailyReminderScheduled(completion: @escaping (Bool) -> Void) {
+        scheduledReminderTimeComponents { components in
+            completion(components != nil)
+        }
+    }
+
+    /// Returns the configured daily reminder time so one-off notifications can
+    /// avoid colliding with it without suppressing themselves entirely.
+    static func scheduledReminderTimeComponents(completion: @escaping (DateComponents?) -> Void) {
         UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
-            let hasDaily = requests.contains { $0.identifier == dailyReminderIdentifier }
+            let components = requests
+                .first { $0.identifier == dailyReminderIdentifier }
+                .flatMap { ($0.trigger as? UNCalendarNotificationTrigger)?.dateComponents }
             DispatchQueue.main.async {
-                completion(hasDaily)
+                completion(components)
             }
         }
     }

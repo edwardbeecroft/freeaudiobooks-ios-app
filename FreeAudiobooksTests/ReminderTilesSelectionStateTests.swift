@@ -98,3 +98,104 @@ final class ReminderTilesSelectionStateTests: XCTestCase {
         XCTAssertEqual(pickerTime.minute, 40)
     }
 }
+
+final class EngagementNotificationTimingTests: XCTestCase {
+
+    private var calendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        return calendar
+    }
+
+    func testNonCollidingEngagementDateIsUnchanged() throws {
+        let proposed = try makeDate(day: 10, hour: 17, minute: 59)
+        let reminder = DateComponents(hour: 20, minute: 0)
+
+        let adjusted = EngagementNotificationTiming.adjustedFireDate(
+            proposedFireDate: proposed,
+            dailyReminderTimeComponents: reminder,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(adjusted, proposed)
+    }
+
+    func testEveningCollisionMovesToNextMorningOutsideQuietHours() throws {
+        let proposed = try makeDate(day: 10, hour: 19, minute: 0)
+        let reminder = DateComponents(hour: 20, minute: 0)
+
+        let adjusted = EngagementNotificationTiming.adjustedFireDate(
+            proposedFireDate: proposed,
+            dailyReminderTimeComponents: reminder,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(adjusted, try makeDate(day: 11, hour: 8, minute: 30))
+    }
+
+    func testMorningCollisionMovesAfterReminderBuffer() throws {
+        let proposed = try makeDate(day: 10, hour: 8, minute: 30)
+        let reminder = DateComponents(hour: 8, minute: 0)
+
+        let adjusted = EngagementNotificationTiming.adjustedFireDate(
+            proposedFireDate: proposed,
+            dailyReminderTimeComponents: reminder,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(adjusted, try makeDate(day: 10, hour: 10, minute: 30))
+    }
+
+    func testQuietHoursMoveToNextMorningWithoutDailyReminder() throws {
+        let proposed = try makeDate(day: 10, hour: 23, minute: 15)
+
+        let adjusted = EngagementNotificationTiming.adjustedFireDate(
+            proposedFireDate: proposed,
+            dailyReminderTimeComponents: nil,
+            calendar: calendar
+        )
+
+        XCTAssertEqual(adjusted, try makeDate(day: 11, hour: 8, minute: 30))
+    }
+
+    func testLegacyMilestoneWithoutModeDefaultsToText() throws {
+        let data = try XCTUnwrap(
+            """
+            {
+              "bookUUID": "book-1",
+              "bookTitle": "A Book",
+              "bookCoverImageURL": "https://example.com/cover.jpg",
+              "contentTypeString": "bookInternal"
+            }
+            """.data(using: .utf8)
+        )
+
+        let milestone = try JSONDecoder().decode(BookProgressMilestone.self, from: data)
+
+        XCTAssertEqual(milestone.mode, .text)
+    }
+
+    func testEngagementCadenceHasInitialAndSevenDayFollowUp() {
+        XCTAssertEqual(EngagementNotificationStage.allCases, [.initial, .followUp])
+        XCTAssertEqual(EngagementNotificationStage.initial.defaultDelayDays, 2)
+        XCTAssertEqual(EngagementNotificationStage.followUp.defaultDelayDays, 7)
+        XCTAssertNotEqual(
+            EngagementNotificationStage.initial.identifier,
+            EngagementNotificationStage.followUp.identifier
+        )
+    }
+
+    private func makeDate(day: Int, hour: Int, minute: Int) throws -> Date {
+        try XCTUnwrap(
+            calendar.date(
+                from: DateComponents(
+                    year: 2027,
+                    month: 1,
+                    day: day,
+                    hour: hour,
+                    minute: minute
+                )
+            )
+        )
+    }
+}

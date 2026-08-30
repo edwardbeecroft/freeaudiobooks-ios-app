@@ -185,6 +185,7 @@ class AnalyticsManager {
         // Reading Milestones
         case readingStarted
         case readingActivated
+        case listeningActivated
         case listeningQuotaBookConsumed
         case readingOnboardingAutoRevealShown
         case readingOnboardingLearned
@@ -676,11 +677,15 @@ class AnalyticsManager {
 	}
 
     // Engagement Engine
-    func trackScheduledBookEngagementPushNotification() {
-        handleLogEvent(eventName: EventTypes.scheduledBookEngagementPushNotification.rawValue, parameters: nil)
+    func trackScheduledBookEngagementPushNotification(stage: String) {
+        handleLogEvent(
+            eventName: EventTypes.scheduledBookEngagementPushNotification.rawValue,
+            parameters: ["stage": stage]
+        )
     }
-    func trackTappedBookEngagementPushNotification() {
-        handleLogEvent(eventName: EventTypes.tappedBookEngagementPushNotification.rawValue, parameters: nil)
+    func trackTappedBookEngagementPushNotification(stage: String?) {
+        let parameters: [String: Any]? = stage.map { ["stage": $0] }
+        handleLogEvent(eventName: EventTypes.tappedBookEngagementPushNotification.rawValue, parameters: parameters)
     }
 
     // Daily Reminder
@@ -745,6 +750,9 @@ class AnalyticsManager {
     }
     func trackReadingActivated() {
         handleLogEvent(eventName: EventTypes.readingActivated.rawValue, parameters: nil)
+    }
+    func trackListeningActivated() {
+        handleLogEvent(eventName: EventTypes.listeningActivated.rawValue, parameters: nil)
     }
     func trackListeningQuotaBookConsumed() {
         handleLogEvent(

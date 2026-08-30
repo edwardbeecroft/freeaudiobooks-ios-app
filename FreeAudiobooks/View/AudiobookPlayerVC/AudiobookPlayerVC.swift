@@ -45,6 +45,10 @@ class AudiobookPlayerVC: UIViewController {
     private var lastTrackedEngagementTime: TimeInterval = 0
     private var isTrackingListeningSession = false
     private var shouldResumeAfterOfflinePlaybackSubscription = false
+    private var listeningActivationElapsedTime: TimeInterval = 0
+    private var listeningActivationStartedAt: TimeInterval?
+
+    private static let listeningActivationThreshold: TimeInterval = 60
 
     init(bookInternal: CDBookInternal, audioData: CDBookInternalAudio) {
         self.bookInternal = bookInternal
@@ -600,6 +604,8 @@ extension AudiobookPlayerVC: AudioPlayerManagerDelegate {
 
     func audioPlayerDidUpdateTime(_ currentTime: TimeInterval, duration: TimeInterval) {
         DispatchQueue.main.async {
+            self.trackListeningActivatedIfNeeded(isPlaying: AudioPlayerManager.shared.isPlaying)
+
             // Only update time labels if user isn't scrubbing (always show current scrub position)
             if !self.isUserScrubbingSlider {
                 self.currentTimeLabel.text = self.formatTime(currentTime)
@@ -619,6 +625,8 @@ extension AudiobookPlayerVC: AudioPlayerManagerDelegate {
 
     func audioPlayerDidChangePlaybackState(_ isPlaying: Bool) {
         DispatchQueue.main.async {
+            self.trackListeningActivatedIfNeeded(isPlaying: isPlaying)
+
             if isPlaying {
                 self.startListeningStatsSessionIfNeeded()
             } else {
@@ -662,10 +670,61 @@ extension AudiobookPlayerVC: AudioPlayerManagerDelegate {
 // MARK: - Helper Methods
 private extension AudiobookPlayerVC {
 
-    func recordAudioEngagement(at currentTime: TimeInterval) {
-        guard currentTime > 0 else { return }
-        lastTrackedEngagementTime = max(lastTrackedEngagementTime, currentTime)
-        ReadingUserDefaults.setLastReadDate(for: bookInternal.contentUUID, mode: .audio)
+    func recordAudioEngagement(at currentTime: TimeInterval, forceNotification: Bool = false) {
+        guard forceNotification || currentTime > 0 else { return }
+
+        if currentTime > 0 {
+            lastTrackedEngagementTime = max(lastTrackedEngagementTime, currentTime)
+            ReadingUserDefaults.setLastReadDate(for: bookInternal.contentUUID, mode: .audio)
+        }
+
+        let duration = AudioPlayerManager.shared.duration
+        let progressPercentage: Int
+        if duration > 0 {
+            progressPercentage = min(100, max(0, Int((currentTime / duration) * 100)))
+        } else {
+            progressPercentage = 0
+        }
+
+        EngagementEngine.recordBookProgress(
+            metadata: bookInternal,
+            progressPercentage: progressPercentage,
+            mode: .audio,
+            forceNotification: forceNotification
+        )
+    }
+
+    func trackListeningActivatedIfNeeded(
+        isPlaying: Bool,
+        now: TimeInterval = ProcessInfo.processInfo.systemUptime
+    ) {
+        guard !FirstTimeManager.hasSeen(item: .listeningActivated) else {
+            listeningActivationStartedAt = nil
+            return
+        }
+
+        if isPlaying {
+            if listeningActivationStartedAt == nil {
+                listeningActivationStartedAt = now
+            }
+        } else if let startedAt = listeningActivationStartedAt {
+            listeningActivationElapsedTime += max(0, now - startedAt)
+            listeningActivationStartedAt = nil
+        }
+
+        let currentPlaybackTime = listeningActivationStartedAt.map { max(0, now - $0) } ?? 0
+        guard listeningActivationElapsedTime + currentPlaybackTime >= Self.listeningActivationThreshold else {
+            return
+        }
+
+        listeningActivationStartedAt = nil
+        FirstTimeManager.markSeen(item: .listeningActivated)
+        AnalyticsManager.shared.trackListeningActivated()
+        recordAudioEngagement(
+            at: AudioPlayerManager.shared.getCurrentPosition(),
+            forceNotification: true
+        )
+        OnboardingRetentionScheduler.cancelAll(reason: "activated")
     }
 
     func startListeningStatsSessionIfNeeded() {

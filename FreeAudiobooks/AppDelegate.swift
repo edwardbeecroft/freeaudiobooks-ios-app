@@ -324,7 +324,9 @@ extension AppDelegate: UNUserNotificationCenterDelegate, MessagingDelegate {
         if
             let bookUUID = userInfo["bookUUID"] as? String,
             let contentTypeString = userInfo["contentType"] as? String {
-            AnalyticsManager.shared.trackTappedBookEngagementPushNotification()
+            AnalyticsManager.shared.trackTappedBookEngagementPushNotification(
+                stage: userInfo["engagementStage"] as? String
+            )
             handleBookEngagementNotification(bookUUID: bookUUID, contentTypeString: contentTypeString)
             return
         }

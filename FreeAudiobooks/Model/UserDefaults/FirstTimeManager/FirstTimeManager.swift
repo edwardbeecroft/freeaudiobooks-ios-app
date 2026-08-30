@@ -15,6 +15,7 @@ enum FirstTimeItem: String {
     case readingChromeRevealLearned
     case readingStarted
     case readingActivated
+    case listeningActivated
     case bookDetailCarouselSwipeHint
 
     var path: String {
@@ -25,6 +26,7 @@ enum FirstTimeItem: String {
         case .readingChromeRevealLearned: return "readingChromeRevealLearned"
         case .readingStarted: return "readingStarted"
         case .readingActivated: return "readingActivated"
+        case .listeningActivated: return "listeningActivated"
         case .bookDetailCarouselSwipeHint: return "bookDetailCarouselSwipeHint"
         }
     }

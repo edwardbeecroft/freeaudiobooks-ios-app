@@ -17,11 +17,128 @@ struct BookProgressMilestone: Codable {
     let bookCoverImageURL: String
     // let progressPercentage: Int // In case we wanted to show the % in a book
     let contentTypeString: String // Maps to contentType enum
+    let mode: LastReadMode
+
+    init(
+        bookUUID: String,
+        bookTitle: String,
+        bookCoverImageURL: String,
+        contentTypeString: String,
+        mode: LastReadMode
+    ) {
+        self.bookUUID = bookUUID
+        self.bookTitle = bookTitle
+        self.bookCoverImageURL = bookCoverImageURL
+        self.contentTypeString = contentTypeString
+        self.mode = mode
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        bookUUID = try container.decode(String.self, forKey: .bookUUID)
+        bookTitle = try container.decode(String.self, forKey: .bookTitle)
+        bookCoverImageURL = try container.decode(String.self, forKey: .bookCoverImageURL)
+        contentTypeString = try container.decode(String.self, forKey: .contentTypeString)
+        mode = try container.decodeIfPresent(LastReadMode.self, forKey: .mode) ?? .text
+    }
+}
+
+struct EngagementNotificationTiming {
+    static let overlapBuffer: TimeInterval = 2 * 60 * 60
+
+    private static let postReminderSpacing: TimeInterval = overlapBuffer + (30 * 60)
+    private static let quietHoursStartHour = 22
+    private static let quietHoursEndHour = 8
+    private static let quietHoursShiftMinute = 30
+
+    static func adjustedFireDate(
+        proposedFireDate: Date,
+        dailyReminderTimeComponents: DateComponents?,
+        calendar: Calendar = .current
+    ) -> Date {
+        var candidate = shiftedOutOfQuietHours(proposedFireDate, calendar: calendar)
+
+        guard let reminderHour = dailyReminderTimeComponents?.hour else {
+            return candidate
+        }
+        let reminderMinute = dailyReminderTimeComponents?.minute ?? 0
+
+        // Re-check after a shift because moving out of quiet hours can put the
+        // notification close to the following day's reminder.
+        for _ in 0..<3 {
+            var reminderComponents = calendar.dateComponents([.year, .month, .day], from: candidate)
+            reminderComponents.hour = reminderHour
+            reminderComponents.minute = reminderMinute
+            reminderComponents.second = 0
+
+            guard let reminderDate = calendar.date(from: reminderComponents) else {
+                return candidate
+            }
+
+            guard abs(candidate.timeIntervalSince(reminderDate)) <= overlapBuffer else {
+                return candidate
+            }
+
+            candidate = shiftedOutOfQuietHours(
+                reminderDate.addingTimeInterval(postReminderSpacing),
+                calendar: calendar
+            )
+        }
+
+        return candidate
+    }
+
+    private static func shiftedOutOfQuietHours(_ date: Date, calendar: Calendar) -> Date {
+        let hour = calendar.component(.hour, from: date)
+        guard hour >= quietHoursStartHour || hour < quietHoursEndHour else {
+            return date
+        }
+
+        let targetDay: Date
+        if hour >= quietHoursStartHour {
+            targetDay = calendar.date(byAdding: .day, value: 1, to: date) ?? date
+        } else {
+            targetDay = date
+        }
+
+        return calendar.date(
+            bySettingHour: quietHoursEndHour,
+            minute: quietHoursShiftMinute,
+            second: 0,
+            of: targetDay
+        ) ?? date
+    }
+}
+
+enum EngagementNotificationStage: String, CaseIterable {
+    case initial
+    case followUp
+
+    var identifier: String {
+        switch self {
+        case .initial: return "book-progress-engagement"
+        case .followUp: return "book-progress-engagement-follow-up"
+        }
+    }
+
+    var remoteConfigDelayKey: RCKeys {
+        switch self {
+        case .initial: return .engagementNotificationsDaysDelay
+        case .followUp: return .engagementNotificationsFollowUpDaysDelay
+        }
+    }
+
+    var defaultDelayDays: Double {
+        switch self {
+        case .initial: return 2
+        case .followUp: return 7
+        }
+    }
 }
 
 struct EngagementEngine {
     private static let bookMilestonesPath: String = "recordedBookProgressMilestones"
-    private static let notificationIdentifier: String = "book-progress-engagement"
+    private static let notificationIdentifiers = EngagementNotificationStage.allCases.map(\.identifier)
     static let userDefaults = UserDefaults.standard
     private static let decoder = JSONDecoder()
     private static let encoder = JSONEncoder()
@@ -91,10 +208,20 @@ struct EngagementEngine {
         }
     }
 
-    static func recordBookProgress(metadata: ReadableContentMetadata, progressPercentage: Int, forceNotification: Bool = false) {
+    static func recordBookProgress(
+        metadata: ReadableContentMetadata,
+        progressPercentage: Int,
+        mode: LastReadMode = .text,
+        forceNotification: Bool = false
+    ) {
 
-        // Only trigger at 5% or higher (user has made decent progress)
-        guard forceNotification || progressPercentage >= 5 else {
+        let hasExistingMilestone = bookMilestones.contains {
+            $0.bookUUID == metadata.contentUUID && $0.mode == mode
+        }
+
+        // Activation can register a title before 5%. Once registered, later
+        // progress keeps its rolling engagement notification current.
+        guard forceNotification || progressPercentage >= 5 || hasExistingMilestone else {
             print("Engagement Engine: Progress not yet at 5% - currently \(progressPercentage)%")
             return
         }
@@ -119,13 +246,14 @@ struct EngagementEngine {
             bookUUID: metadata.contentUUID,
             bookTitle: title,
             bookCoverImageURL: coverImageURL,
-            contentTypeString: metadata.contentType.rawValue
+            contentTypeString: metadata.contentType.rawValue,
+            mode: mode
         )
 
         // Throttle milestone STORAGE at 30 seconds
         let milestoneMinimumInterval: TimeInterval = 30
         var shouldUpdateMilestone = true
-        if let lastUpdate = lastUpdateTimestamp {
+        if !forceNotification, let lastUpdate = lastUpdateTimestamp {
             let timeSinceLastUpdate = Date().timeIntervalSince(lastUpdate)
             if timeSinceLastUpdate < milestoneMinimumInterval {
                 shouldUpdateMilestone = false
@@ -160,21 +288,19 @@ struct EngagementEngine {
         if shouldSendNotification {
             lastNotificationScheduleTimestamp = Date()
 
-            // Check if daily reminders are active - if so, skip engagement notifications
-            DailyReminderScheduler.hasDailyReminderScheduled { hasDaily in
-                if hasDaily {
-                    print("EngagementEngine: Daily reminder active, skipping re-engagement notification")
-                    return
-                }
-
+            DailyReminderScheduler.scheduledReminderTimeComponents { dailyReminderTimeComponents in
                 UNUserNotificationCenter.current().getPendingNotificationRequests(completionHandler: { requests in
-                    let hasExisting = requests.contains(where: { $0.identifier == notificationIdentifier })
+                    let existingIdentifiers = Set(
+                        requests
+                            .map(\.identifier)
+                            .filter(notificationIdentifiers.contains)
+                    )
 
-                    // Schedule notification for this book
-                    if !hasExisting {
-                        AnalyticsManager.shared.trackScheduledBookEngagementPushNotification()
-                    }
-                    schedulePushNotificationForBookMilestone(milestone, isSuperceding: hasExisting) // testTimeInterval: 30
+                    schedulePushNotificationsForBookMilestone(
+                        milestone,
+                        existingIdentifiers: existingIdentifiers,
+                        dailyReminderTimeComponents: dailyReminderTimeComponents
+                    )
                 })
             }
         } else {
@@ -183,7 +309,7 @@ struct EngagementEngine {
     }
 
     static func cancelPendingNotification(includeStores: Bool) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notificationIdentifier])
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: notificationIdentifiers)
         if includeStores {
             userDefaults.removeObject(forKey: bookMilestonesPath)
             userDefaults.removeObject(forKey: lastBookUUIDKey)
@@ -209,23 +335,13 @@ struct EngagementEngine {
 }
 
 extension EngagementEngine {
-    private static func schedulePushNotificationForBookMilestone(_ milestone: BookProgressMilestone, isSuperceding: Bool, testTimeInterval: TimeInterval? = nil) {
+    private static func schedulePushNotificationsForBookMilestone(
+        _ milestone: BookProgressMilestone,
+        existingIdentifiers: Set<String>,
+        dailyReminderTimeComponents: DateComponents?
+    ) {
 
         cancelPendingNotification(includeStores: false)
-
-        let notificationContent = UNMutableNotificationContent()
-
-        let titlePrefix = titleOptions[nextPNTitleIndex]
-        let title = "\(titlePrefix) \(milestone.bookTitle)?"
-        notificationContent.title = title
-        notificationContent.body = bodyOptions[nextPNBodyIndex]
-
-        notificationContent.badge = NSNumber(value: 1)
-        notificationContent.sound = .default
-        notificationContent.userInfo = [
-            "bookUUID": milestone.bookUUID,
-            "contentType": milestone.contentTypeString
-        ]
 
         let kingfisherManager = KingfisherManager(downloader: ImageDownloader.default, cache: ImageCache.default)
         guard let url = URL(string: milestone.bookCoverImageURL) else { return }
@@ -235,50 +351,111 @@ extension EngagementEngine {
             case .success(let imgResult):
                 let uiImage = imgResult.image
                 guard let attachment = UNNotificationAttachment.create(identifier: milestone.bookUUID, image: uiImage, options: nil) else { return }
-                notificationContent.attachments = [attachment]
 
-                let timeInterval: TimeInterval
-                if let testInterval = testTimeInterval {
-                    timeInterval = testInterval
-                } else {
-                    let engagementNotificationsDaysDelay = RCValues.shared.double(forKey: .engagementNotificationsDaysDelay, defaultValue: 2)
-                    timeInterval = 60*60*24*engagementNotificationsDaysDelay // 2 days default
-                }
-
-                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-
-                let request = UNNotificationRequest(identifier: notificationIdentifier, content: notificationContent, trigger: trigger)
-
-                let center = UNUserNotificationCenter.current()
-                center.add(request) { error in
-                    if let error = error {
-                        print(error.localizedDescription)
-                    } else {
-                        if !isSuperceding {
-                            // Rotate title index
-                            var nextTitleIdx = nextPNTitleIndex + 1
-                            if nextTitleIdx > titleOptions.count - 1 {
-                                nextTitleIdx = 0
-                            }
-                            nextPNTitleIndex = nextTitleIdx
-
-                            // Rotate body index
-                            var nextBodyIdx = nextPNBodyIndex + 1
-                            if nextBodyIdx > bodyOptions.count - 1 {
-                                nextBodyIdx = 0
-                            }
-                            nextPNBodyIndex = nextBodyIdx
-                        }
-
-                        lastBookUUIDScheduledForNotification = milestone.bookUUID
-
-                        print("Engagement Engine: Scheduled notification for \(trigger.nextTriggerDate()!.localizedFullDateString).\nTitle: \(notificationContent.title)\nBody: \(notificationContent.body)")
-                    }
+                for stage in EngagementNotificationStage.allCases {
+                    scheduleNotification(
+                        for: milestone,
+                        stage: stage,
+                        attachment: attachment,
+                        isSuperceding: existingIdentifiers.contains(stage.identifier),
+                        dailyReminderTimeComponents: dailyReminderTimeComponents
+                    )
                 }
             case .failure(let err):
                 print("Engagement Engine: Failed to schedule notification with error: \(err.errorDescription ?? "Unknown")")
             }
         }
+    }
+
+    private static func scheduleNotification(
+        for milestone: BookProgressMilestone,
+        stage: EngagementNotificationStage,
+        attachment: UNNotificationAttachment,
+        isSuperceding: Bool,
+        dailyReminderTimeComponents: DateComponents?
+    ) {
+        let notificationContent = notificationContent(
+            for: milestone,
+            stage: stage,
+            attachment: attachment
+        )
+        let delayDays = RCValues.shared.double(
+            forKey: stage.remoteConfigDelayKey,
+            defaultValue: stage.defaultDelayDays
+        )
+        let proposedFireDate = Date().addingTimeInterval(60 * 60 * 24 * delayDays)
+        let fireDate = EngagementNotificationTiming.adjustedFireDate(
+            proposedFireDate: proposedFireDate,
+            dailyReminderTimeComponents: dailyReminderTimeComponents
+        )
+        let trigger = UNTimeIntervalNotificationTrigger(
+            timeInterval: max(1, fireDate.timeIntervalSinceNow),
+            repeats: false
+        )
+        let request = UNNotificationRequest(
+            identifier: stage.identifier,
+            content: notificationContent,
+            trigger: trigger
+        )
+
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print(error.localizedDescription)
+                return
+            }
+
+            if !isSuperceding {
+                AnalyticsManager.shared.trackScheduledBookEngagementPushNotification(stage: stage.rawValue)
+            }
+
+            if stage == .initial, !isSuperceding {
+                rotateCopyIndices(for: milestone.mode)
+            }
+
+            lastBookUUIDScheduledForNotification = milestone.bookUUID
+
+            if let nextTriggerDate = trigger.nextTriggerDate() {
+                print("Engagement Engine: Scheduled \(stage.rawValue) notification for \(nextTriggerDate.localizedFullDateString).\nTitle: \(notificationContent.title)\nBody: \(notificationContent.body)")
+            }
+        }
+    }
+
+    private static func notificationContent(
+        for milestone: BookProgressMilestone,
+        stage: EngagementNotificationStage,
+        attachment: UNNotificationAttachment
+    ) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+
+        switch stage {
+        case .initial:
+            let availableTitles = titleOptions(for: milestone.mode)
+            let availableBodies = bodyOptions(for: milestone.mode)
+            let titlePrefix = availableTitles[nextPNTitleIndex % availableTitles.count]
+            content.title = "\(titlePrefix) \(milestone.bookTitle)?"
+            content.body = availableBodies[nextPNBodyIndex % availableBodies.count]
+        case .followUp:
+            content.title = "Ready to continue \(milestone.bookTitle)?"
+            content.body = "Tap to pick up where you left off."
+        }
+
+        content.badge = NSNumber(value: 1)
+        content.sound = .default
+        content.attachments = [attachment]
+        content.userInfo = [
+            "bookUUID": milestone.bookUUID,
+            "contentType": milestone.contentTypeString,
+            "mode": milestone.mode.rawValue,
+            "engagementStage": stage.rawValue
+        ]
+        return content
+    }
+
+    private static func rotateCopyIndices(for mode: LastReadMode) {
+        let availableTitles = titleOptions(for: mode)
+        let availableBodies = bodyOptions(for: mode)
+        nextPNTitleIndex = (nextPNTitleIndex + 1) % availableTitles.count
+        nextPNBodyIndex = (nextPNBodyIndex + 1) % availableBodies.count
     }
 }
 
@@ -312,7 +489,29 @@ extension UNNotificationAttachment {
 }
 
 extension EngagementEngine {
-    private static let titleOptions = [
+    private static func titleOptions(for mode: LastReadMode) -> [String] {
+        switch mode {
+        case .text: return readingTitleOptions
+        case .audio: return listeningTitleOptions
+        }
+    }
+
+    private static func bodyOptions(for mode: LastReadMode) -> [String] {
+        switch mode {
+        case .text: return readingBodyOptions
+        case .audio: return listeningBodyOptions
+        }
+    }
+
+    private static let readingTitleOptions = [
+        "Enjoying",
+        "Continue",
+        "Keep reading",
+        "Back to",
+        "Ready to finish"
+    ]
+
+    private static let listeningTitleOptions = [
         "Enjoying",
         "Continue",
         "Keep listening",
@@ -320,7 +519,35 @@ extension EngagementEngine {
         "Ready to finish"
     ]
 
-    private static let bodyOptions = [
+    private static let readingBodyOptions = [
+        "Take a moment for yourself — a few pages await.",
+        "You're in the flow — keep those pages turning.",
+        "Time to unwind with your book — you’ve earned it.",
+        "Slow down, breathe, and enjoy another chapter.",
+        "You're flying through — keep that momentum going!",
+        "Your book’s waiting — the perfect escape for a quiet moment.",
+        "You’re making great progress — keep it up!",
+        "A calm moment and a good story — sounds perfect.",
+        "Let’s get lost in the story for a little while.",
+        "Adventure and discovery await — let’s continue.",
+        "The next chapter might be your favorite yet.",
+        "The world can wait — it’s reading time.",
+        "Every page takes you closer to the ending — keep reading!",
+        "Make yourself comfortable — your next chapter awaits.",
+        "Nothing better than a quiet moment and a good read.",
+        "Time to relax and reconnect with your story.",
+        "You’re deep in the story — stay with it a little longer.",
+        "Pour a cup of tea and enjoy a few pages.",
+        "The perfect way to wind down — open your book.",
+        "Your story’s getting good — don’t stop now!",
+        "Your story’s still waiting — take a little time for you.",
+        "Pause the day — and pick up where you left off.",
+        "The best part might be just ahead — ready to dive back in?",
+        "Reading time is your time — let’s continue the journey.",
+        "Let’s finish this chapter strong — you’ve got this."
+    ]
+
+    private static let listeningBodyOptions = [
         // A mixture of calm, self-care focused, and momentum-focused
         "Take a moment for yourself — your next chapter awaits.",
         "You're in the flow — keep the story going.",

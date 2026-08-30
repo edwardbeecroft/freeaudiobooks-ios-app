@@ -155,6 +155,7 @@ enum RCKeys: String {
     // Engagement Engine
     case shouldSendEngagementEngineNotifications
     case engagementNotificationsDaysDelay
+    case engagementNotificationsFollowUpDaysDelay
 
     // Daily Reminder
     case dailyReminderNotificationTitleAB

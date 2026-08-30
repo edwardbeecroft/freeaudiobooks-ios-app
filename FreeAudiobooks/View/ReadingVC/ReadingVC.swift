@@ -1742,6 +1742,7 @@ extension ReadingVC {
                         EngagementEngine.recordBookProgress(
                             metadata: self.metadata,
                             progressPercentage: progress,
+                            mode: .text,
                             forceNotification: true
                         )
                     }
@@ -1907,7 +1908,14 @@ extension ReadingVC: UIScrollViewDelegate {
             print("📖 readingActivated triggered - cumulative: \(cumulativeScrollDistance)px, threshold: \(activationThreshold)px")
             FirstTimeManager.markSeen(item: .readingActivated)
             AnalyticsManager.shared.trackReadingActivated()
-            // User is hooked — cancel all pending onboarding retention nudges
+            let progress = ReadingUserDefaults.progressForBookWithUUID(metadata.contentUUID) ?? 0
+            EngagementEngine.recordBookProgress(
+                metadata: metadata,
+                progressPercentage: progress,
+                mode: .text,
+                forceNotification: true
+            )
+            // Activation is complete; the engagement engine now owns re-engagement.
             OnboardingRetentionScheduler.cancelAll(reason: "activated")
         }
     }
@@ -1933,7 +1941,11 @@ extension ReadingVC: UIScrollViewDelegate {
         }
 
         // Track engagement milestones for push notification scheduling
-        EngagementEngine.recordBookProgress(metadata: metadata, progressPercentage: progress)
+        EngagementEngine.recordBookProgress(
+            metadata: metadata,
+            progressPercentage: progress,
+            mode: .text
+        )
     }
 
     private func updateProgressLabel(progress: Int) {

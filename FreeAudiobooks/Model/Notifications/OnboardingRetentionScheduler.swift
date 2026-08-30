@@ -22,8 +22,8 @@ import UserNotifications
 /// but not opened / started reading but not yet activated) and is re-evaluated
 /// on state transitions by calling `rescheduleRemaining()`.
 ///
-/// All pending nudges are cancelled once the user hits the `readingActivated`
-/// event. Any slot whose fire time lands within ±2h of the user-chosen daily
+/// All pending nudges are cancelled once the user activates reading or listening.
+/// Any slot whose fire time lands within ±2h of the user-chosen daily
 /// reminder is dropped — the daily reminder always wins.
 class OnboardingRetentionScheduler {
 
@@ -149,7 +149,8 @@ class OnboardingRetentionScheduler {
         }
 
         // Terminal state — user has activated. Cancel everything.
-        if FirstTimeManager.hasSeen(item: .readingActivated) {
+        if FirstTimeManager.hasSeen(item: .readingActivated)
+            || FirstTimeManager.hasSeen(item: .listeningActivated) {
             cancelAll(reason: "activated")
             return
         }

@@ -88,6 +88,8 @@
 	<string>Find your next great listen</string>
 	<key>engagementNotificationsDaysDelay</key>
 	<integer>2</integer>
+	<key>engagementNotificationsFollowUpDaysDelay</key>
+	<integer>7</integer>
 	<key>facebookPageURLAB</key>
 	<string>https://facebook.com/audiobooksapp.free</string>
 	<key>freebooksEmailAB</key>
