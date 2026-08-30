@@ -181,7 +181,7 @@
 	<key>onbCredibilityReviewsTitle</key>
 	<string>Give us a rating</string>
 	<key>shouldRequestSKReviewInOnboardingAB</key>
-	<true/>
+	<false/>
 	<key>onbCredibilityReviewsUserCountAB</key>
 	<string>500K+ FreeAudiobooks Listeners</string>
 	<key>onbDailyListeningGoalSubtitleAB</key>
