@@ -2479,7 +2479,7 @@ extension BookDetailVC {
             
             let newSavedCount = AccountManager.shared.user?.totalSavedBooksCount ?? 0
             let requiredLaunchCount = RCValues.shared.int(forKey: .requiredLaunchCountForSKReview) ?? 2
-            if newSavedCount > 3 && SKReviewManager.launchCount >= requiredLaunchCount {
+            if newSavedCount >= 3 && SKReviewManager.launchCount >= requiredLaunchCount {
                 SKReviewManager.requestReview(venue: .savedBook)
             }
         }
@@ -2507,7 +2507,7 @@ extension BookDetailVC {
             
             let newSavedCount = AccountManager.shared.user?.totalSavedBooksCount ?? 0
             let requiredLaunchCount = RCValues.shared.int(forKey: .requiredLaunchCountForSKReview) ?? 2
-            if newSavedCount > 3 && SKReviewManager.launchCount >= requiredLaunchCount {
+            if newSavedCount >= 3 && SKReviewManager.launchCount >= requiredLaunchCount {
                 SKReviewManager.requestReview(venue: .savedBook)
             }
         }
