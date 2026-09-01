@@ -82,7 +82,7 @@ struct PersonalizedPicksAnimationView: View {
         case .romance:
             let firstRomanceCoverImage = RCValues.shared.string(forKey: .onbPersonalizedPicksRomanceImagev2)
             return ["romance-\(firstRomanceCoverImage)", "romance-17", "romance-13"]
-        case .thriller: return ["thriller-18", "thriller-16", "thriller-2"]
+        case .thriller: return ["thriller-11", "thriller-16", "thriller-2"]
         case .drama: return ["drama-1", "drama-12", "drama-3"]
         case .mystery: return ["mystery-12", "mystery-2", "mystery-3"]
         case .fantasy: return ["fantasy-14", "fantasy-2", "fantasy-3"]
