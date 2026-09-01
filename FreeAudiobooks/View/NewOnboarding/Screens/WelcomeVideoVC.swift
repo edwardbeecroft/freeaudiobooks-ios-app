@@ -37,7 +37,7 @@ class WelcomeVideoVC: BaseNewOnboardingVC {
     #if DEBUG
     private enum DebugEmailOptInPreview {
         static let isEnabled = true
-        static let genre: BookInternalGenre = .thriller
+        static let genre: BookInternalGenre = .drama
         static let isSubscriber = false
         static let advanceAfterDismiss = false
     }
