@@ -91,7 +91,7 @@ struct PersonalizedPicksAnimationView: View {
         case .scienceFiction: return ["scifi-4", "scifi-2", "scifi-13"]
         case .horror: return ["horror-13", "horror-4", "horror-12"]
         case .comedy: return ["comedy-1", "comedy-13", "comedy-12"]
-        case .kids: return ["kids-12", "kids-13", "kids-3"]
+        case .kids: return ["kids-12", "kids-14", "kids-13"]
         }
     }
 

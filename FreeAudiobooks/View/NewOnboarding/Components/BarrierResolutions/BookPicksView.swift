@@ -54,7 +54,7 @@ struct BookPicksContent: View {
         case .comedy:
             return ["comedy-11", "comedy-2", "comedy-3"]
         case .kids:
-            return ["kids-11", "kids-3", "kids-2"]
+            return ["kids-11", "kids-3", "kids-15"]
         }
     }
 
