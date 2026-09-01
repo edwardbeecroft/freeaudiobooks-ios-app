@@ -38,7 +38,7 @@ struct BookPicksContent: View {
         case .thriller:
             return ["thriller-18", "thriller-15", "thriller-3"]
         case .drama:
-            return ["drama-13", "drama-2", "drama-3"]
+            return ["drama-13", "drama-2", "drama-16"]
         case .mystery:
             return ["mystery-13", "mystery-2", "mystery-3"]
         case .fantasy:
