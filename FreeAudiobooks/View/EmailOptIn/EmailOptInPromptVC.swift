@@ -217,7 +217,7 @@ final class EmailOptInPromptVC: BottomSheetController {
     // NOTE: Middle one is centered
     private func placeholderImageNames() -> [String] {
         switch genre {
-        case .romance: return ["romance-17", "romance-9", "romance-3"]
+        case .romance: return ["romance-10", "romance-15", "romance-3"]
         case .thriller: return ["thriller-11", "thriller-12", "thriller-2"]
         case .drama: return ["drama-2", "drama-12", "drama-13"]
         case .mystery: return ["mystery-1", "mystery-2", "mystery-3"]
