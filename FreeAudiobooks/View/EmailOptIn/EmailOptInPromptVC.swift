@@ -89,7 +89,7 @@ final class EmailOptInPromptVC: BottomSheetController {
         let subtitleLabel = UILabel()
         subtitleLabel.font = Fonts.medium15
         subtitleLabel.textColor = Colours.textSecondary
-        subtitleLabel.text = trigger.subtitle(forSubscriber: isSubscriber) + " Unsubscribe anytime."
+        subtitleLabel.text = trigger.subtitle(forSubscriber: isSubscriber)
         subtitleLabel.textAlignment = .center
         subtitleLabel.numberOfLines = 0
 
@@ -218,7 +218,7 @@ final class EmailOptInPromptVC: BottomSheetController {
     private func placeholderImageNames() -> [String] {
         switch genre {
         case .romance: return ["romance-10", "romance-15", "romance-3"]
-        case .thriller: return ["thriller-11", "thriller-12", "thriller-2"]
+        case .thriller: return ["thriller-17", "thriller-12", "thriller-5"]
         case .drama: return ["drama-2", "drama-12", "drama-13"]
         case .mystery: return ["mystery-1", "mystery-2", "mystery-3"]
         case .fantasy: return ["fantasy-2", "fantasy-13", "fantasy-12"]
