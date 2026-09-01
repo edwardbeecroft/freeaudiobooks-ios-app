@@ -101,8 +101,8 @@ struct BookPicksContent: View {
 
         return Image(uiImage: uiImage)
             .resizable()
-            .aspectRatio(500.0 / 745.0, contentMode: .fill)
-            .frame(width: 110, height: 160)
+            .aspectRatio(2.0 / 3.0, contentMode: .fill)
+            .frame(width: 110, height: 165)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .shadow(color: Color(Colours.shadowBase).opacity(0.15), radius: 10, x: 0, y: 5)
             .rotationEffect(.degrees(isAnimated ? rotation : 0))

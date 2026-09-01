@@ -81,7 +81,7 @@ struct PersonalizedPicksAnimationView: View {
         switch genre {
         case .romance:
             let firstRomanceCoverImage = RCValues.shared.string(forKey: .onbPersonalizedPicksRomanceImagev2)
-            return ["romance-\(firstRomanceCoverImage)", "romance-17", "romance-9"]
+            return ["romance-\(firstRomanceCoverImage)", "romance-17", "romance-13"]
         case .thriller: return ["thriller-4", "thriller-11", "thriller-3"]
         case .drama: return ["drama-1", "drama-12", "drama-3"]
         case .mystery: return ["mystery-12", "mystery-2", "mystery-3"]
@@ -427,8 +427,8 @@ struct PersonalizedPicksAnimationView: View {
     @ViewBuilder
     private func finalBooksStack() -> some View {
         // Peek books: start behind hero (no offset/rotation), then fan out
-        let peekOffset: CGFloat = showPeeks ? 55 : 0
-        let peekRotation: Double = showPeeks ? 12 : 0
+        let peekOffset: CGFloat = showPeeks ? 68 : 0
+        let peekRotation: Double = showPeeks ? 16 : 0
         let peekYOffset: CGFloat = showPeeks ? 15 : 0
         let peekScale: CGFloat = showPeeks ? 0.85 : 0.7
 
