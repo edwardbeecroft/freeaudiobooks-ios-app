@@ -42,7 +42,7 @@ struct BookPicksContent: View {
         case .mystery:
             return ["mystery-13", "mystery-2", "mystery-3"]
         case .fantasy:
-            return ["fantasy-11", "fantasy-2", "fantasy-3"]
+            return ["fantasy-11", "fantasy-2", "fantasy-15"]
         case .adventure:
             return ["adventure-12", "adventure-2", "adventure-3"]
         case .historical:
