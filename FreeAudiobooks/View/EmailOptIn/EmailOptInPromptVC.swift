@@ -225,7 +225,7 @@ final class EmailOptInPromptVC: BottomSheetController {
         case .adventure: return ["adventure-14", "adventure-18", "adventure-17"]
         case .historical: return ["historical-17", "historical-15", "historical-16"]
         case .scienceFiction: return ["scifi-17", "scifi-15", "scifi-16"]
-        case .horror: return ["horror-3", "horror-12", "horror-1"]
+        case .horror: return ["horror-15", "horror-14", "horror-16"]
         case .comedy: return ["comedy-12", "comedy-4", "comedy-11"]
         case .kids: return ["kids-2", "kids-1", "kids-3"]
         }
