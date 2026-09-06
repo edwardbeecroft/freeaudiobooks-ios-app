@@ -167,7 +167,7 @@ final class SettingEverythingUpVC: BaseNewOnboardingVC {
         percentLabel.accessibilityTraits = .updatesFrequently
 
         let headline = UILabel()
-        configure(headline, font: Fonts.boldWithSize(28), style: .title1)
+        configure(headline, font: Fonts.semiBold28, style: .title1)
         headline.text = RCValues.shared.string(forKey: .onbSettingEverythingUpTitle)
         headline.textAlignment = .center
         headline.accessibilityTraits = .header
