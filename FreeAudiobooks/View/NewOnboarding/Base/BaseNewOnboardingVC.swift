@@ -166,6 +166,7 @@ class BaseNewOnboardingVC: UIViewController {
         case .credibilityReviews: AnalyticsManager.shared.trackOnbCredibilityReviewsScreenViewed()
         case .personalizedPicks: AnalyticsManager.shared.trackOnbPersonalizedPicksScreenViewed()
         case .saveProgressAuth: AnalyticsManager.shared.trackOnbSaveProgressAuthScreenViewed()
+        case .settingEverythingUp: AnalyticsManager.shared.trackOnbSettingEverythingUpScreenViewed(variant: coordinator.dataStore.variant.rawValue)
         case .paywall: AnalyticsManager.shared.trackOnbPaywallScreenViewed()
         }
     }
@@ -187,6 +188,7 @@ class BaseNewOnboardingVC: UIViewController {
         case .credibilityReviews: AnalyticsManager.shared.trackOnbCredibilityReviewsContinueTapped()
         case .personalizedPicks: AnalyticsManager.shared.trackOnbPersonalizedPicksContinueTapped()
         case .saveProgressAuth: break // Custom auth buttons
+        case .settingEverythingUp: break // Completes automatically, without a tap
         case .paywall: break // Handled by Superwall
         }
     }

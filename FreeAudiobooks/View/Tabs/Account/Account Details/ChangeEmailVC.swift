@@ -192,9 +192,6 @@ class ChangeEmailVC: UIViewController, UITextFieldDelegate, BEMCheckBoxDelegate 
 	func showReauthVC(newEmail: String) {
 		// Create a custom view controller
 		let reauthenticateVC = ReauthenticateVC()
-		// Create the dialog
-		let popup = PopupDialog(viewController: reauthenticateVC, buttonAlignment: .horizontal, transitionStyle: .zoomIn, panGestureDismissal: false)
-		
 		let buttonOne = CancelButton(title: "Cancel") {}
 		
 		// Create first button
@@ -243,10 +240,7 @@ class ChangeEmailVC: UIViewController, UITextFieldDelegate, BEMCheckBoxDelegate 
 				self.present(PopupHelper.defaultPopup(title: "Invalid email", message: "Please enter a valid email and try again."), animated: true, completion: nil)
 			}
 		}
-		buttonOne.titleColor = Colours.grey140
-		buttonOne.buttonColor = nil
-		
-		popup.addButtons([buttonOne, buttonTwo])
+		let popup = reauthenticateVC.makePopup(cancelButton: buttonOne, continueButton: buttonTwo)
 		present(popup, animated: true, completion: nil)
 	}
 	

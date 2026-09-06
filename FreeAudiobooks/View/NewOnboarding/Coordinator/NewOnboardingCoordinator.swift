@@ -31,7 +31,7 @@ class NewOnboardingCoordinator {
 
     weak var delegate: NewOnboardingCoordinatorDelegate?
     private(set) var containerVC: NewOnboardingContainerVC?
-    private var steps: [NewOnboardingStep] = []
+    private(set) var steps: [NewOnboardingStep] = []
     private(set) var currentIndex: Int = 0
 
     /// Stores user selections throughout the flow
@@ -39,7 +39,7 @@ class NewOnboardingCoordinator {
 
     // MARK: - Initialization
 
-    private init() {}
+    init() {}
 
     // MARK: - Reset
 
@@ -54,24 +54,32 @@ class NewOnboardingCoordinator {
     // MARK: - Setup
 
     /// Configures the coordinator before starting
-    /// - Parameters:
-    ///   - delegate: Receives completion callbacks
-    ///   - variant: Optional variant override (defaults to RemoteConfig value)
-    func set(delegate: NewOnboardingCoordinatorDelegate,
-             variant: OnboardingVariant? = nil) {
+    /// Resumes the saved assignment, or uses OnboardingVariant.current for a new journey.
+    func set(delegate: NewOnboardingCoordinatorDelegate) {
         self.delegate = delegate
 
-        let activeVariant = variant ?? OnboardingVariant.current
-        self.steps = activeVariant.steps
+        let activeVariant = Self.resolveVariant(
+            persistedValue: NewOnboardingUserDefaults.getOnboardingVariant(),
+            currentVariant: OnboardingVariant.current
+        )
+        configureFlow(variant: activeVariant,
+                      isSubscribed: Superwall.shared.subscriptionStatus.isActive)
+    }
 
-        // Remove paywall step if user is already subscribed (e.g. from a previous onboarding attempt)
-        if Superwall.shared.subscriptionStatus.isActive {
-            self.steps.removeAll(where: { $0 == .paywall })
+    /// Resolve once at the start of a journey, before constructing steps or logging events.
+    static func resolveVariant(persistedValue: String?, currentVariant: OnboardingVariant) -> OnboardingVariant {
+        return persistedValue.flatMap(OnboardingVariant.init(rawValue:)) ?? currentVariant
+    }
+
+    /// Configure the resolved journey with a single assignment for navigation and analytics.
+    func configureFlow(variant: OnboardingVariant, isSubscribed: Bool) {
+        self.steps = variant.steps
+        if isSubscribed {
+            steps.removeAll { $0 == .paywall || (variant == .setupBeforePaywall && $0 == .settingEverythingUp) }
         }
-
-        // Reset dataStore before restoring to clear any stale in-memory values
         dataStore.reset()
-        dataStore.variant = activeVariant
+        dataStore.variant = variant
+        NewOnboardingUserDefaults.saveOnboardingVariant(variant.rawValue)
 
         // Restore dataStore from UserDefaults
         restoreDataStoreFromUserDefaults()
@@ -151,7 +159,9 @@ class NewOnboardingCoordinator {
     func goToPreviousScreen() {
         guard currentIndex > 0 else { return }
 
-        currentIndex -= 1
+        repeat {
+            currentIndex -= 1
+        } while currentIndex > 0 && steps[currentIndex] == .settingEverythingUp
         let step = steps[currentIndex]
         containerVC?.transitionToStep(step, direction: OnboardingTransitionDirection.backward)
     }
@@ -159,6 +169,20 @@ class NewOnboardingCoordinator {
     /// Whether the user can go back (not on first step)
     var canGoBack: Bool {
         return currentIndex > 0
+    }
+
+    var currentStep: NewOnboardingStep? {
+        steps.indices.contains(currentIndex) ? steps[currentIndex] : nil
+    }
+
+    /// Ignore callbacks from a removed screen, including an earlier visit to the same step.
+    @discardableResult
+    func completeSetupScreen(_ screen: SettingEverythingUpVC) -> Bool {
+        guard currentStep == .settingEverythingUp,
+              containerVC?.isDisplaying(screen) == true else { return false }
+        AnalyticsManager.shared.trackOnbSettingEverythingUpCompleted(variant: dataStore.variant.rawValue)
+        goToNextScreen()
+        return true
     }
 
     // MARK: - Progress
@@ -413,9 +437,5 @@ class NewOnboardingCoordinator {
         dataStore.didViewBuildsHabitsLineChart = NewOnboardingUserDefaults.getDidViewBuildsHabitsLineChart()
         dataStore.didViewReadingBarrierResolution = NewOnboardingUserDefaults.getDidViewReadingBarrierResolution()
         dataStore.didCompletePaywall = NewOnboardingUserDefaults.hasCompletedPaywall()
-        if let variantString = NewOnboardingUserDefaults.getOnboardingVariant(),
-           let variant = OnboardingVariant(rawValue: variantString) {
-            dataStore.variant = variant
-        }
     }
 }

@@ -25,12 +25,13 @@ enum NewOnboardingStep: String, CaseIterable {
     case credibilityReviews
     case personalizedPicks
     case saveProgressAuth
+    case settingEverythingUp
     case paywall
 
     /// Whether this step should be included in the progress bar calculation
     var includesInProgressBar: Bool {
         switch self {
-        case .paywall:
+        case .paywall, .settingEverythingUp:
             return false
         default:
             return true
@@ -81,7 +82,8 @@ enum NewOnboardingStep: String, CaseIterable {
 
         // Pass-through steps (always considered complete - they don't block progress)
         case .credibilityReviews,
-             .personalizedPicks:
+             .personalizedPicks,
+             .settingEverythingUp:
             return true
 
         // Paywall is complete once user has seen it and taken action (dismiss or subscribe)
@@ -123,6 +125,8 @@ enum NewOnboardingStep: String, CaseIterable {
             return PersonalizedPicksVC(coordinator: coordinator)
         case .saveProgressAuth:
             return SaveProgressAuthVC(coordinator: coordinator)
+        case .settingEverythingUp:
+            return SettingEverythingUpVC(coordinator: coordinator)
         case .paywall:
             return OnboardingPaywallVC(coordinator: coordinator)
         }

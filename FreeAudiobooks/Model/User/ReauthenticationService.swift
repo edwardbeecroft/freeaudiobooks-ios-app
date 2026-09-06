@@ -106,11 +106,6 @@ class ReauthenticationService: NSObject {
     private func showEmailPasswordReauthentication(from viewController: UIViewController) {
         let reauthVC = ReauthenticateVC()
 
-        let popup = PopupDialog(viewController: reauthVC,
-                                buttonAlignment: .horizontal,
-                                transitionStyle: .zoomIn,
-                                panGestureDismissal: false)
-
         let cancelButton = CancelButton(title: "Cancel") { [weak self] in
             self?.completionHandler?(.failure(.cancelled))
         }
@@ -129,10 +124,7 @@ class ReauthenticationService: NSObject {
             self.reauthenticateWithCredential(credential)
         }
 
-        cancelButton.titleColor = Colours.grey140
-        cancelButton.buttonColor = nil
-
-        popup.addButtons([cancelButton, continueButton])
+        let popup = reauthVC.makePopup(cancelButton: cancelButton, continueButton: continueButton, tapGestureDismissal: false)
         viewController.present(popup, animated: true)
     }
 

@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C0DE0906AB00000700000001 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000800000001 /* AccountDeletionTests.swift */; };
+		C0DE0906AB00000500000001 /* SettingEverythingUpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */; };
+		C0DE0906AB00000300000001 /* SettingEverythingUpVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */; };
+		C0DE0906AB00000100000001 /* SettingEverythingUpSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000200000001 /* SettingEverythingUpSchedule.swift */; };
 		0D20A1012F3E100100AA0001 /* SearchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A1022F3E100100AA0001 /* SearchVC.swift */; };
 		0D20A5012F3E300100AA0001 /* ContinueReadingStoryCVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A5022F3E300100AA0001 /* ContinueReadingStoryCVC.swift */; };
 		0D20A5032F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A5042F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift */; };
@@ -468,6 +472,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C0DE0906AB00000800000001 /* AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionTests.swift; sourceTree = "<group>"; };
+		C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpTests.swift; sourceTree = "<group>"; };
+		C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpVC.swift; sourceTree = "<group>"; };
+		C0DE0906AB00000200000001 /* SettingEverythingUpSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpSchedule.swift; sourceTree = "<group>"; };
 		0D20A1022F3E100100AA0001 /* SearchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchVC.swift; sourceTree = "<group>"; };
 		0D20A5022F3E300100AA0001 /* ContinueReadingStoryCVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinueReadingStoryCVC.swift; sourceTree = "<group>"; };
 		0D20A5042F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinueReadingPlaceholderCVC.swift; sourceTree = "<group>"; };
@@ -1211,6 +1219,7 @@
 				7561C7DC2F2AA2DF003A2337 /* VideoWelcome */,
 				7561C7DB2F2AA2C8003A2337 /* PersonalizedPicks */,
 				BA6149280B32CFB433DE6FCC /* PersonalizedPicksAnimationView.swift */,
+				C0DE0906AB00000200000001 /* SettingEverythingUpSchedule.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1237,6 +1246,7 @@
 				7561C7142F27744A003A2337 /* HowDidYouHearVC.swift */,
 				7561C71A2F27744A003A2337 /* PreviousAppsVC.swift */,
 				7561C71E2F27744A003A2337 /* BuildsHabitsLineChartVC.swift */,
+				C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */,
 				7561C7212F27744A003A2337 /* WhyDoYouListenVC.swift */,
 				7561C76E2F28A000003A2337 /* ReadingBarriersVC.swift */,
 				7561C76F2F28A000003A2337 /* ReadingBarrierResolutionVC.swift */,
@@ -1778,6 +1788,8 @@
 			children = (
 				E58F8C3D25BA19A2001E0860 /* PaywallTesting */,
 				E512A37E22DD08210005F9E3 /* ZapTests.swift */,
+				C0DE0906AB00000800000001 /* AccountDeletionTests.swift */,
+				C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */,
 				C0DE00010000000E00000001 /* ListeningQuotaManagerTests.swift */,
 				C0DE00040000000100000001 /* AudioPlaybackProgressManagerTests.swift */,
 				C0DE00050000000100000001 /* PersonalizedFeedBuilderTests.swift */,
@@ -2616,6 +2628,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				E512A37F22DD08210005F9E3 /* ZapTests.swift in Sources */,
+				C0DE0906AB00000700000001 /* AccountDeletionTests.swift in Sources */,
+				C0DE0906AB00000500000001 /* SettingEverythingUpTests.swift in Sources */,
 				C0DE00010000000D00000001 /* ListeningQuotaManagerTests.swift in Sources */,
 				C0DE00040000000200000001 /* AudioPlaybackProgressManagerTests.swift in Sources */,
 				C0DE00050000000200000001 /* PersonalizedFeedBuilderTests.swift in Sources */,
@@ -2844,6 +2858,7 @@
 				7561C7702F28A000003A2337 /* ReadingBarriersVC.swift in Sources */,
 				7561C7712F28A000003A2337 /* ReadingBarrierResolutionVC.swift in Sources */,
 				7561C73E2F27744A003A2337 /* BuildsHabitsLineChartVC.swift in Sources */,
+				C0DE0906AB00000300000001 /* SettingEverythingUpVC.swift in Sources */,
 				751DACBD2F54DC94009402C9 /* AppAppearanceManager.swift in Sources */,
 				7543A8D82F2C1303001561F9 /* EmailOptInUserDefaults.swift in Sources */,
 				7561C73F2F27744A003A2337 /* HowDidYouHearVC.swift in Sources */,
@@ -2901,6 +2916,7 @@
 				C1857CD6FFA64BA7DAF6F7A0 /* SignInEmailVC.swift in Sources */,
 				28619ABA97D1180EE33FB812 /* SignInPasswordVC.swift in Sources */,
 				7AE2CD07D881557A7EE6F77F /* PersonalizedPicksAnimationView.swift in Sources */,
+				C0DE0906AB00000100000001 /* SettingEverythingUpSchedule.swift in Sources */,
 				27B47ECD2C9AD4A74D8D5967 /* RoadmapItemDetailVC.swift in Sources */,
 				4226D8B38EC2711B9F7E48CC /* ReadingParagraphStyle.swift in Sources */,
 				69E4F105492BBE1486D0833A /* ParagraphStyleView.swift in Sources */,

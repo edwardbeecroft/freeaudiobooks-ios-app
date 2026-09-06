@@ -19,6 +19,17 @@ class CustomHoshiTextField: HoshiTextField {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func drawViewsForRect(_ rect: CGRect) {
+        super.drawViewsForRect(rect)
+
+        // Hoshi recreates the placeholder font by name, which cannot resolve
+        // private SF font names. Preserve the system font's descriptor instead.
+        if let font {
+            placeholderLabel.font = font.withSize(font.pointSize * placeholderFontScale)
+            placeholderColor = Colours.textSecondary // Recalculate the placeholder layout.
+        }
+    }
+
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         guard traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) else { return }

@@ -169,9 +169,6 @@ class ChangePasswordVC: UIViewController, UITextFieldDelegate, BEMCheckBoxDelega
 	func showReauthVC(newPassword: String) {
 		// Create a custom view controller
 		let reauthenticateVC = ReauthenticateVC()
-		// Create the dialog
-		let popup = PopupDialog(viewController: reauthenticateVC, buttonAlignment: .horizontal, transitionStyle: .zoomIn, panGestureDismissal: false)
-		
 		let buttonOne = CancelButton(title: "Cancel") {}
 		
 		// Create first button
@@ -218,10 +215,7 @@ class ChangePasswordVC: UIViewController, UITextFieldDelegate, BEMCheckBoxDelega
 				return
 			}
 		}
-		buttonOne.titleColor = Colours.grey140
-		buttonOne.buttonColor = nil
-		
-		popup.addButtons([buttonOne, buttonTwo])
+		let popup = reauthenticateVC.makePopup(cancelButton: buttonOne, continueButton: buttonTwo)
 		present(popup, animated: true, completion: nil)
 	}
 	

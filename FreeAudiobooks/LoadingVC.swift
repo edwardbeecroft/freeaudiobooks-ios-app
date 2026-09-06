@@ -164,11 +164,7 @@ class LoadingVC: UIViewController {
     }
 
     private func presentNewOnboardingFlow() {
-        let variant = OnboardingVariant.current
-        NewOnboardingCoordinator.shared.set(
-            delegate: self,
-            variant: variant
-        )
+        NewOnboardingCoordinator.shared.set(delegate: self)
 
         let containerVC = NewOnboardingCoordinator.shared.createContainerVC()
         containerVC.modalPresentationStyle = .fullScreen

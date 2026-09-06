@@ -9,9 +9,11 @@
 import Foundation
 
 /// Defines different onboarding flow variants for A/B testing
-/// The variant is controlled via RemoteConfig's `onboardingVariant` key
+/// The variant is controlled via RemoteConfig's `onboardingVariantv3AB` key
 enum OnboardingVariant: String {
     case fullFlow
+    case setupBeforePersonalizedPicks
+    case setupBeforePaywall
     case noPersonalizedPicks
     case noPaywall
     case mini
@@ -21,8 +23,8 @@ enum OnboardingVariant: String {
 
     /// Gets the current variant from RemoteConfig
     static var current: OnboardingVariant {
-        let variantString = RCValues.shared.string(forKey: .onboardingVariantv2)
-        return OnboardingVariant(rawValue: variantString) ?? .fullFlow
+        let variantString = RCValues.shared.string(forKey: .onboardingVariantv3AB)
+        return OnboardingVariant(rawValue: variantString) ?? .fullFlowAuthFirst
     }
 
     /// The ordered list of steps for this variant
@@ -44,26 +46,32 @@ enum OnboardingVariant: String {
             .paywall,
             .saveProgressAuth
         ]
-        let availableSteps = RCValues.shared.bool(forKey: .isarAB3)
-            ? allSteps.filter { $0 != .credibilityReviews }
-            : allSteps
 
         switch self {
         case .fullFlow:
-            return availableSteps
+            return allSteps
+        case .setupBeforePersonalizedPicks, .setupBeforePaywall:
+            var modifiedSteps = OnboardingVariant.fullFlowAuthFirst.steps
+            let destination: NewOnboardingStep = self == .setupBeforePersonalizedPicks ? .personalizedPicks : .paywall
+            if let index = modifiedSteps.firstIndex(of: destination) {
+                modifiedSteps.insert(.settingEverythingUp, at: index)
+            }
+            return modifiedSteps
         case .fullFlowAuthFirst:
-            var modifiedSteps = availableSteps
+            // Keep the reviews screen in all three experiment arms. The native
+            // review request is controlled by shouldRequestSKReviewInOnboardingAB.
+            var modifiedSteps = allSteps
             if let paywallIndex = modifiedSteps.firstIndex(of: .paywall),
                let authIndex = modifiedSteps.firstIndex(of: .saveProgressAuth) {
                 modifiedSteps.swapAt(paywallIndex, authIndex)
             }
             return modifiedSteps
         case .noPersonalizedPicks:
-            var modifiedSteps = availableSteps
+            var modifiedSteps = allSteps
             modifiedSteps.removeAll(where: { $0 == .personalizedPicks })
             return modifiedSteps
         case .noPaywall:
-            var modifiedSteps = availableSteps
+            var modifiedSteps = allSteps
             modifiedSteps.removeAll(where: { $0 == .paywall })
             return modifiedSteps
         case .mini:

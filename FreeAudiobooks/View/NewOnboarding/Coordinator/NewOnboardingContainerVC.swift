@@ -412,6 +412,10 @@ class NewOnboardingContainerVC: UIViewController {
 
     // MARK: - Public Methods
 
+    func isDisplaying(_ screen: BaseNewOnboardingVC) -> Bool {
+        currentChildVC === screen
+    }
+
     /// Updates continue button enabled state
     func setContinueButtonEnabled(_ enabled: Bool) {
         continueButton.isEnabled = enabled

@@ -81,14 +81,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         checkAppleCredentialState()
         
         SKReviewManager.incrementLaunchCount()
-
-        //AccountManager.signOut(tabBarController: nil)
         
         configureSuperwall()
         configureFBSDK()
         configureKingfisher()
         configureGoogleAds()
         configureShortcutItems()
+
+        // Keep this testing shortcut after configureSuperwall().
+        // AccountManager.signOut(tabBarController: nil)
 
         // Start network monitoring
         NetworkMonitor.shared.startMonitoring()

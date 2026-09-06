@@ -572,28 +572,26 @@ extension AccountManager {
 
 extension AccountManager {
     func deleteAllDataForCurrentUser(userUUID: String, completion: ((Bool) -> Void)?) {
-        
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        // Optimistically delete any user images
-        if let user = AccountManager.shared.user {
-            if let imageURL = user.profileImageURLString {
-                let storageRef = Storage.storage().reference(forURL: imageURL)
-                storageRef.delete(completion: nil)
-            }
+        guard Auth.auth().currentUser?.uid == userUUID else {
+            completion?(false)
+            return
         }
-        
-        // Delete the user
-        let userRef = Firestore.firestore().collection(FirebasePaths.users.rawValue).document(uid)
+
+        let profileImageURL = AccountManager.shared.user?.profileImageURLString
+        let userRef = Firestore.firestore().collection(FirebasePaths.users.rawValue).document(userUUID)
         userRef.delete { error in
-            if error != nil {
+            guard error == nil else {
                 completion?(false)
                 return
             }
+
+            // Preserve local data and images if the profile deletion fails.
+            if let profileImageURL {
+                Storage.storage().reference(forURL: profileImageURL).delete(completion: nil)
+            }
+            CoreDataManager.shared.clearAllData()
             completion?(true)
         }
-        
-        CoreDataManager.shared.clearAllData()
     }
 }
 

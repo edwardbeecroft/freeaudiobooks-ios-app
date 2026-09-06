@@ -44,10 +44,10 @@ extension SKReviewManager {
 	static func requestReview(venue: SKReviewVenue) {
         guard AppConstants.shared.developmentMode == .production else { return }
 
-        guard RCValues.shared.bool(forKey: .isarAB3) == false || SKReviewManager.launchCount > 1 else {
+        guard RCValues.shared.bool(forKey: .allowSKReviewOnFirstLaunch) || SKReviewManager.launchCount > 1 else {
             return
         }
-        
+
 		SKStoreReviewController.requestReview()
 		AnalyticsManager.shared.trackRequestedAppReviewAutomatically(venue: venue)
 		// Record for email opt-in 2-minute guardrail (skip during onboarding)

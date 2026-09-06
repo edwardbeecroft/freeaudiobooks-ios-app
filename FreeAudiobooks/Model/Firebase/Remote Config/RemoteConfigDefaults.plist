@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>allowSKReviewOnFirstLaunch</key>
+	<false/>
 	<key>accountShareWithFriendsCellText</key>
 	<string>Invite Friends</string>
 	<key>addRoadmapItemButtonTitle</key>
@@ -108,12 +110,6 @@
 	<string>https://www.instagram.com/audiobooksapp</string>
 	<key>instagramSchemeAB</key>
 	<string>instagram://user?username=audiobooksapp</string>
-	<key>isarAB</key>
-	<false/>
-	<key>isarAB2</key>
-	<false/>
-	<key>isarAB3</key>
-	<false/>
 	<key>isReadingVCInterstitialAdEnabled</key>
 	<true/>
 	<key>isRecapFeatureEnabled</key>
@@ -258,12 +254,12 @@
 	<string>Select all that apply</string>
 	<key>onbWhyDoYouListenTitleAB</key>
 	<string>Why do you listen?</string>
-	<key>onboardingVariant</key>
-	<string>fullFlow</string>
-	<key>onboardingVariantv2</key>
-	<string>fullFlowAuthFirst</string>
 	<key>welcomeVideoVariantAB</key>
 	<string>image</string>
+	<key>onboardingVariantv3AB</key>
+	<string>fullFlowAuthFirst</string>
+	<key>onbSettingEverythingUpTitle</key>
+	<string>We’re setting everything||up for you</string>
 	<key>personalizedPicksVariant</key>
 	<string>subtitleNoBadge</string>
 	<key>privacyPolicyURLAB</key>

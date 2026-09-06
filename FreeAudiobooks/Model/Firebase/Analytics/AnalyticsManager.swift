@@ -251,6 +251,8 @@ class AnalyticsManager {
         case onbPushNotificationSkipped
         case onbCredibilityReviewsScreenViewed
         case onbCredibilityReviewsContinueTapped
+        case onbSettingEverythingUpScreenViewed
+        case onbSettingEverythingUpCompleted
         case onbPersonalizedPicksScreenViewed
         case onbPersonalizedPicksContinueTapped
         case onbPersonalizedPicksRomanceActivatedv2
@@ -1037,6 +1039,14 @@ class AnalyticsManager {
     }
     func trackOnbCredibilityReviewsContinueTapped() {
         handleLogEvent(eventName: EventTypes.onbCredibilityReviewsContinueTapped.rawValue, parameters: nil)
+    }
+    func trackOnbSettingEverythingUpScreenViewed(variant: String) {
+        handleLogEvent(eventName: EventTypes.onbSettingEverythingUpScreenViewed.rawValue,
+                       parameters: ["variant": variant])
+    }
+    func trackOnbSettingEverythingUpCompleted(variant: String) {
+        handleLogEvent(eventName: EventTypes.onbSettingEverythingUpCompleted.rawValue,
+                       parameters: ["variant": variant])
     }
     func trackOnbPersonalizedPicksScreenViewed() {
         handleLogEvent(eventName: EventTypes.onbPersonalizedPicksScreenViewed.rawValue, parameters: nil)

@@ -10,7 +10,6 @@ import UIKit
 import NVActivityIndicatorView
 import FirebaseAuth
 
-
 protocol AccountDetailsVCDelegate {
     func accountDeleted()
 }
@@ -273,6 +272,92 @@ class AccountDetailsViewController: UIViewController {
             deleteAccountButton.widthAnchor.constraint(equalToConstant: 140)
         ])
     }
+
+    // MARK: - Account deletion operations
+
+    var accountIDForDeletion: String? {
+        Auth.auth().currentUser?.uid
+    }
+
+    func verifyIdentityForDeletion(completion: @escaping (Result<Void, ReauthenticationError>) -> Void) {
+        ReauthenticationService.shared.reauthenticate(from: self, completion: completion)
+    }
+
+    func deleteVerifiedAccount(userID: String) {
+        guard accountIDForDeletion == userID else {
+            showLoadingIndicator(show: false)
+            showUnableToDeleteError()
+            return
+        }
+
+        // Brevo still needs the authenticated user and their Firestore document.
+        // A marketing-service failure does not prevent account deletion.
+        emailMarketingService.unsubscribeUser { [weak self] _ in
+            guard let self = self else { return }
+            AccountManager.shared.deleteAllDataForCurrentUser(userUUID: userID) { success in
+                DispatchQueue.main.async {
+                    guard success else {
+                        self.showLoadingIndicator(show: false)
+                        self.showUnableToDeleteError()
+                        return
+                    }
+                    self.deleteFirebaseAuthUser(userID: userID)
+                }
+            }
+        }
+    }
+
+    func showReauthenticationError(message: String) {
+        let controller = UIAlertController(
+            title: "Verification Failed",
+            message: message,
+            preferredStyle: .alert
+        )
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        controller.addAction(okAction)
+        present(controller, animated: true)
+    }
+
+    func showUnableToDeleteError() {
+        let title = L10n.networkError
+        let message = "We were unable to delete your account. Please check you have an internet connection and try again."
+        let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let noAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        let retryAction = UIAlertAction(title: "Retry", style: .default) { tappedYes in
+            self.handleDeleteAccount()
+        }
+
+        controller.addAction(noAction)
+        controller.addAction(retryAction)
+
+        self.present(controller, animated: true, completion: nil)
+    }
+
+    func showLoadingIndicator(show: Bool) {
+        if show {
+            loadingIndicatorView = NVActivityIndicatorView(frame: CGRect.zero, type: NVActivityIndicatorType.circleStrokeSpin, color: Colours.textPrimary, padding: 0)
+            guard let indicatorView = loadingIndicatorView else { return }
+
+            deleteAccountButton.isHidden = true
+
+            indicatorView.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(indicatorView)
+            NSLayoutConstraint.activate([
+                indicatorView.centerYAnchor.constraint(equalTo: deleteAccountButton.centerYAnchor),
+                indicatorView.widthAnchor.constraint(equalToConstant: UIConstants.shared.fetchingIndicatorWidthHeight),
+                indicatorView.heightAnchor.constraint(equalToConstant: UIConstants.shared.fetchingIndicatorWidthHeight),
+                indicatorView.centerXAnchor.constraint(equalTo: deleteAccountButton.centerXAnchor)
+                ])
+            indicatorView.startAnimating()
+        } else {
+            loadingIndicatorView?.stopAnimating()
+            loadingIndicatorView?.removeFromSuperview()
+            loadingIndicatorView = nil
+
+            deleteAccountButton.isHidden = false
+        }
+    }
+
 }
 
 extension AccountDetailsViewController {
@@ -319,50 +404,32 @@ extension AccountDetailsViewController {
         self.present(alertController, animated: true, completion: nil)
     }
     
-    func handleDeleteAccount() {
 
-        guard let currentUser = Auth.auth().currentUser else {
+    func handleDeleteAccount() {
+        guard accountIDForDeletion != nil else {
             showUnableToDeleteError()
             return
         }
-        showLoadingIndicator(show: true)
-
-        // Step 1: Delete from Brevo first (needs auth + Firestore doc to exist)
-        // We don't fail account deletion if this fails
-        emailMarketingService.unsubscribeUser { [weak self] _ in
-            guard let self = self else { return }
-
-            // Step 2: Delete Firestore data
-            AccountManager.shared.deleteAllDataForCurrentUser(userUUID: currentUser.uid) { success in
-                guard success else {
-                    DispatchQueue.main.async {
-                        self.showLoadingIndicator(show: false)
-                        self.showUnableToDeleteError()
-                    }
-                    return
-                }
-
-                // Step 3: Delete Firebase Auth user (may require reauthentication)
-                self.deleteFirebaseAuthUser()
-            }
-        }
+        // Verification must finish before touching marketing, Storage, Firestore,
+        // or local data. Cancelling either verification prompt leaves them intact.
+        handleReauthenticationRequired()
     }
 
-    private func deleteFirebaseAuthUser() {
-        Auth.auth().currentUser?.delete { [weak self] error in
-            guard let self = self else { return }
 
+    private func deleteFirebaseAuthUser(userID: String) {
+        guard let currentUser = Auth.auth().currentUser, currentUser.uid == userID else {
+            showLoadingIndicator(show: false)
+            showUnableToDeleteError()
+            return
+        }
+        currentUser.delete { [weak self] error in
+            guard let self = self else { return }
             DispatchQueue.main.async {
-                if let error = error {
-                    // Check if reauthentication is required
-                    if let errCode = AuthErrorCode(rawValue: (error as NSError).code),
-                       errCode == .requiresRecentLogin {
-                        self.showLoadingIndicator(show: false)
-                        self.handleReauthenticationRequired()
-                    } else {
-                        self.showLoadingIndicator(show: false)
-                        self.showUnableToDeleteError()
-                    }
+                self.showLoadingIndicator(show: false)
+                if error != nil {
+                    // Do not offer a cancellable verification step after cleanup.
+                    // A retry starts again at the up-front verification gate.
+                    self.showUnableToDeleteError()
                 } else {
                     self.showAccountDeletedPopup()
                 }
@@ -386,7 +453,7 @@ extension AccountDetailsViewController {
         }
 
         let title = "Verification Required"
-        let message = "For security, please verify your identity with \(methodDescription) to complete account deletion."
+        let message = "For security, please verify your identity with \(methodDescription) before deleting your account. Nothing will be deleted if you cancel."
 
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
 
@@ -401,17 +468,26 @@ extension AccountDetailsViewController {
         present(alertController, animated: true)
     }
 
-    private func performReauthenticationAndDelete() {
+
+    func performReauthenticationAndDelete() {
+        guard let userID = accountIDForDeletion else {
+            showUnableToDeleteError()
+            return
+        }
         showLoadingIndicator(show: true)
 
-        ReauthenticationService.shared.reauthenticate(from: self) { [weak self] result in
+        verifyIdentityForDeletion { [weak self] result in
             guard let self = self else { return }
 
             DispatchQueue.main.async {
                 switch result {
                 case .success:
-                    // Reauthentication successful, now delete the account
-                    self.deleteFirebaseAuthUser()
+                    guard self.accountIDForDeletion == userID else {
+                        self.showLoadingIndicator(show: false)
+                        self.showReauthenticationError(message: "Your signed-in account changed. Please try again.")
+                        return
+                    }
+                    self.deleteVerifiedAccount(userID: userID)
 
                 case .failure(let error):
                     self.showLoadingIndicator(show: false)
@@ -434,31 +510,8 @@ extension AccountDetailsViewController {
         }
     }
 
-    private func showReauthenticationError(message: String) {
-        let controller = UIAlertController(
-            title: "Verification Failed",
-            message: message,
-            preferredStyle: .alert
-        )
-        let okAction = UIAlertAction(title: "OK", style: .default)
-        controller.addAction(okAction)
-        present(controller, animated: true)
-    }
     
-    func showUnableToDeleteError() {
-        let title = L10n.networkError
-        let message = "We were unable to delete your account. Please check you have an internet connection and try again."
-        let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let noAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-        let retryAction = UIAlertAction(title: "Retry", style: .default) { tappedYes in
-            self.handleDeleteAccount()
-        }
-        
-        controller.addAction(noAction)
-        controller.addAction(retryAction)
-        
-        self.present(controller, animated: true, completion: nil)
-    }
+
     
     func showAccountDeletedPopup() {
         let title = "Account Deleted"
@@ -474,32 +527,6 @@ extension AccountDetailsViewController {
     }
 }
 
-extension AccountDetailsViewController {
-    func showLoadingIndicator(show: Bool) {
-        if show {
-            loadingIndicatorView = NVActivityIndicatorView(frame: CGRect.zero, type: NVActivityIndicatorType.circleStrokeSpin, color: Colours.textPrimary, padding: 0)
-            guard let indicatorView = loadingIndicatorView else { return }
-            
-            deleteAccountButton.isHidden = true
-            
-            indicatorView.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(indicatorView)
-            NSLayoutConstraint.activate([
-                indicatorView.centerYAnchor.constraint(equalTo: deleteAccountButton.centerYAnchor),
-                indicatorView.widthAnchor.constraint(equalToConstant: UIConstants.shared.fetchingIndicatorWidthHeight),
-                indicatorView.heightAnchor.constraint(equalToConstant: UIConstants.shared.fetchingIndicatorWidthHeight),
-                indicatorView.centerXAnchor.constraint(equalTo: deleteAccountButton.centerXAnchor)
-                ])
-            indicatorView.startAnimating()
-        } else {
-            loadingIndicatorView?.stopAnimating()
-            loadingIndicatorView?.removeFromSuperview()
-            loadingIndicatorView = nil
-            
-            deleteAccountButton.isHidden = false
-        }
-    }
-}
 
 struct AccountDetailsViewModel {
 	let navTitle = "Your Account"

@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import TextFieldEffects
+import PopupDialog
 
 class ReauthenticateVC: UIViewController {
 	
@@ -32,12 +32,36 @@ class ReauthenticateVC: UIViewController {
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
 	}()
+
+    func makePopup(cancelButton: CancelButton, continueButton: DefaultButton, tapGestureDismissal: Bool = true) -> PopupDialog {
+        let popup = PopupDialog(viewController: self,
+                                buttonAlignment: .horizontal,
+                                transitionStyle: .zoomIn,
+                                tapGestureDismissal: tapGestureDismissal,
+                                panGestureDismissal: false)
+        if let container = popup.view as? PopupDialogContainerView {
+            container.backgroundColor = Colours.surfaceCard
+            container.cornerRadius = Float(UIConstants.shared.cardCornerRadius)
+        }
+
+        cancelButton.titleFont = Fonts.medium15
+        cancelButton.titleColor = Colours.textSecondary
+        cancelButton.buttonColor = Colours.surfaceCard
+        cancelButton.separatorColor = Colours.separator
+
+        continueButton.titleFont = Fonts.semiBold15
+        continueButton.titleColor = Colours.ctaForeground
+        continueButton.buttonColor = Colours.ctaBackground
+        continueButton.separatorColor = Colours.separator
+
+        popup.addButtons([cancelButton, continueButton])
+        return popup
+    }
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		//		view.translatesAutoresizingMaskIntoConstraints = false
-		//		view.widthAnchor.constraint(equalToConstant: 40).isActive = true
+		view.backgroundColor = Colours.surfaceCard
 		view.heightAnchor.constraint(equalToConstant: 210).isActive = true
 		
 		titleLabel.text = "Reauthentication required"
@@ -52,7 +76,7 @@ class ReauthenticateVC: UIViewController {
 		titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 20).isActive = true
 		titleLabel.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -UIConstants.shared.standardMargin).isActive = true
 		
-		titleSplitterView.backgroundColor = Colours.grey210
+		titleSplitterView.backgroundColor = Colours.separator
 		titleSplitterView.translatesAutoresizingMaskIntoConstraints = false
 		view.addSubview(titleSplitterView)
 		NSLayoutConstraint.activate([

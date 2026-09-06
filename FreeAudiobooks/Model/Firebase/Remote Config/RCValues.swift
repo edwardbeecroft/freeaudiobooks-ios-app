@@ -17,9 +17,7 @@ enum RCKeys: String {
 	case termsOfUseURLAB
 	case minimumAppVersionAB
 	case freebooksEmailAB
-    case isarAB
-    case isarAB2
-    case isarAB3
+    case allowSKReviewOnFirstLaunch
     
     case shareStoryMessageBodyAB
     
@@ -40,9 +38,7 @@ enum RCKeys: String {
 
 	case monthsBetweenAskingForReview
 
-    // New Onboarding Flow (v4.0.0+)
-    case onboardingVariant
-    case onboardingVariantv2
+    case onboardingVariantv3AB
     case welcomeVideoVariantAB
 
     // New Onboarding - Common
@@ -125,6 +121,9 @@ enum RCKeys: String {
     case onbCredibilityReviewsTestimonial2TextAB
     case onbCredibilityReviewsTestimonial3Name
     case onbCredibilityReviewsTestimonial3TextAB
+
+    // New Onboarding - Setting Everything Up
+    case onbSettingEverythingUpTitle
 
     // New Onboarding - Personalized Picks (Screen 18)
     case personalizedPicksVariant
