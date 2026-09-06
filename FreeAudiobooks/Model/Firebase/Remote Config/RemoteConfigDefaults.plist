@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>allowSKReviewOnFirstLaunch</key>
-	<false/>
+	<true/>
 	<key>accountShareWithFriendsCellText</key>
 	<string>Invite Friends</string>
 	<key>addRoadmapItemButtonTitle</key>

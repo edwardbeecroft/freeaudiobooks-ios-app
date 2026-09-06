@@ -21,7 +21,7 @@ Leave the live `onboardingVariantv2` parameter unchanged for already-released ap
 
 Set `shouldRequestSKReviewInOnboardingAB` to `false` to disable the native review request while retaining the credibility/reviews screen in all three experiment arms. This flag controls only the native prompt; it does not remove the reviews screen. Full-length legacy variants retain the reviews screen too; abbreviated variants keep their existing shortened flows.
 
-`allowSKReviewOnFirstLaunch` defaults to `false` in both apps. It blocks native review requests on the first app launch while keeping the reviews screen visible. Set it to `true` to allow first-launch requests, subject to the other review checks. During onboarding, `shouldRequestSKReviewInOnboardingAB` must also be `true`. Keep both settings identical across experiment arms.
+`allowSKReviewOnFirstLaunch` defaults to `true` in both apps. It allows native review requests on the first app launch, subject to the other review checks. Set it to `false` to block first-launch requests while keeping the reviews screen visible. During onboarding, `shouldRequestSKReviewInOnboardingAB` must also be `true`. Keep both settings identical across experiment arms.
 
 ## Title copy
 
