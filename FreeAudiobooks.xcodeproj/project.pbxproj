@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA460906AB00000000000001 /* BookReviewAuthorShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */; };
+		CA460906AB00000000000003 /* send-book.png in Resources */ = {isa = PBXBuildFile; fileRef = CA460906AB00000000000004 /* send-book.png */; };
 		C0DE0906AB00000700000001 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000800000001 /* AccountDeletionTests.swift */; };
 		C0DE0906AB00000500000001 /* SettingEverythingUpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */; };
 		C0DE0906AB00000300000001 /* SettingEverythingUpVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */; };
@@ -472,6 +474,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReviewAuthorShareTests.swift; sourceTree = "<group>"; };
+		CA460906AB00000000000004 /* send-book.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "send-book.png"; sourceTree = "<group>"; };
 		C0DE0906AB00000800000001 /* AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionTests.swift; sourceTree = "<group>"; };
 		C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpTests.swift; sourceTree = "<group>"; };
 		C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpVC.swift; sourceTree = "<group>"; };
@@ -1046,6 +1050,7 @@
 				750B091B29B16AE800AF2D99 /* dictate.png */,
 				750B091A29B16AE700AF2D99 /* save.png */,
 				750B091829B1648700AF2D99 /* share.png */,
+				CA460906AB00000000000004 /* send-book.png */,
 			);
 			path = ResponseActions;
 			sourceTree = "<group>";
@@ -1790,6 +1795,7 @@
 				E512A37E22DD08210005F9E3 /* ZapTests.swift */,
 				C0DE0906AB00000800000001 /* AccountDeletionTests.swift */,
 				C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */,
+				CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */,
 				C0DE00010000000E00000001 /* ListeningQuotaManagerTests.swift */,
 				C0DE00040000000100000001 /* AudioPlaybackProgressManagerTests.swift */,
 				C0DE00050000000100000001 /* PersonalizedFeedBuilderTests.swift */,
@@ -2359,6 +2365,7 @@
 				7565F49F2F4A033B0021FEF2 /* comedy-search.jpg in Resources */,
 				7565F4B62F4A135F0021FEF2 /* scienceFiction-search.jpg in Resources */,
 				75AE02F02F158A6700744B9D /* star-icon.png in Resources */,
+				CA460906AB00000000000003 /* send-book.png in Resources */,
 				7543A8F02F355BA8001561F9 /* feedback-bubble.png in Resources */,
 				7565F4AD2F4A0FDA0021FEF2 /* mystery-search.jpg in Resources */,
 				E514325F22B0E4F200ECA157 /* privacy-icon-new.png in Resources */,
@@ -2630,6 +2637,7 @@
 				E512A37F22DD08210005F9E3 /* ZapTests.swift in Sources */,
 				C0DE0906AB00000700000001 /* AccountDeletionTests.swift in Sources */,
 				C0DE0906AB00000500000001 /* SettingEverythingUpTests.swift in Sources */,
+				CA460906AB00000000000001 /* BookReviewAuthorShareTests.swift in Sources */,
 				C0DE00010000000D00000001 /* ListeningQuotaManagerTests.swift in Sources */,
 				C0DE00040000000200000001 /* AudioPlaybackProgressManagerTests.swift in Sources */,
 				C0DE00050000000200000001 /* PersonalizedFeedBuilderTests.swift in Sources */,

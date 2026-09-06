@@ -32,10 +32,45 @@ enum AnalyticsParameter: String {
     case listeningQuotaUsed
 }
 
+struct BookReviewAnalyticsContext {
+    let showsAuthorShare: Bool
+    let bookReviewVariant: BookReviewVariant
+    let contentType: ReviewedContentType
+
+    var parameters: [String: Any] {
+        [
+            "author_share_variant": showsAuthorShare ? "checkbox" : "control",
+            "book_review_variant": bookReviewVariant.rawValue,
+            "content_type": contentType.rawValue
+        ]
+    }
+}
+
+struct BookRatingAnalytics {
+    let context: BookReviewAnalyticsContext
+    let rating: Double
+    let hasComment: Bool
+    let authorShareSelected: Bool
+    let isUpdate: Bool
+
+    var parameters: [String: Any] {
+        var parameters = context.parameters
+        parameters["rating"] = rating
+        parameters["has_comment"] = hasComment
+        parameters["author_share_selected"] = authorShareSelected
+        parameters["is_update"] = isUpdate
+        return parameters
+    }
+}
+
 class AnalyticsManager {
 	
 	static let shared = AnalyticsManager()
-	private init() {}
+    private let eventLogger: (String, [String: Any]?) -> Void
+
+    init(eventLogger: @escaping (String, [String: Any]?) -> Void = { Analytics.logEvent($0, parameters: $1) }) {
+        self.eventLogger = eventLogger
+    }
 	
 	enum EventTypes: String {
 		
@@ -84,6 +119,9 @@ class AnalyticsManager {
         case bookInternalRatingSubmitted // Internal
         case bookInternalAudiobookRatingSubmitted // Internal - audiobook
         case bookRatingSubmittedWithComment // All
+        case bookRated
+        case bookRatedWithComment
+        case bookRatedWithAuthorShare
         
         
         case showPaywallPrePopupChecked
@@ -775,7 +813,7 @@ class AnalyticsManager {
 
     func handleLogEvent(eventName: String, parameters: [String: Any]?) {
         let cleanedParameters = cleanParametersForFirebase(parameters)
-        Analytics.logEvent(eventName, parameters: cleanedParameters)
+        eventLogger(eventName, cleanedParameters)
     }
 
     private func cleanParametersForFirebase(_ parameters: [String: Any]?) -> [String: Any]? {
@@ -863,8 +901,20 @@ class AnalyticsManager {
 
     // MARK: - Enhanced Book Completion
 
-    func trackEnhancedBookCompletionViewed() {
-        handleLogEvent(eventName: EventTypes.enhancedBookCompletionViewed.rawValue, parameters: nil)
+    func trackEnhancedBookCompletionViewed(context: BookReviewAnalyticsContext) {
+        handleLogEvent(eventName: EventTypes.enhancedBookCompletionViewed.rawValue, parameters: context.parameters)
+    }
+
+    func trackBookRated(review: BookRatingAnalytics) {
+        handleLogEvent(eventName: EventTypes.bookRated.rawValue, parameters: review.parameters)
+    }
+
+    func trackBookRatedWithComment(review: BookRatingAnalytics) {
+        handleLogEvent(eventName: EventTypes.bookRatedWithComment.rawValue, parameters: review.parameters)
+    }
+
+    func trackBookRatedWithAuthorShare(review: BookRatingAnalytics) {
+        handleLogEvent(eventName: EventTypes.bookRatedWithAuthorShare.rawValue, parameters: review.parameters)
     }
 
     func trackEnhancedBookCompletionShareViewed() {

@@ -237,13 +237,15 @@ enum RCKeys: String {
     case isRecapFeatureEnabled
 
     // Book completion popup
-    case bookCompletionShareButtonTitle
+    case bookCompletionShareButtonTitleAB
+    case bookCompletionShareButtonVariantAB
     case bookCompletionTitleLabel
     case bookCompletionRatingPromptLabelAB
     case bookCompletionRatingPromptLabelBookAB
     case bookCompletionReviewPlaceholderTextAB
     case bookCompletionReviewIntroTextAB
     case bookReviewVariantAB
+    case shouldShowBookReviewAuthorShareAB
 
     // Email Opt-In Prompt - Book Saved Trigger
     case emailOptInBookSavedTitle
@@ -380,6 +382,19 @@ enum BookReviewVariant: String {
     static var current: BookReviewVariant {
         let raw = RCValues.shared.string(forKey: .bookReviewVariantAB)
         return BookReviewVariant(rawValue: raw) ?? .original
+    }
+}
+
+// MARK: - Book Completion Share Button Variant
+
+enum BookCompletionShareButtonVariant: String {
+    case original
+    case originalWithShareIcon
+    case shareWithShareIcon
+
+    static var current: BookCompletionShareButtonVariant {
+        let raw = RCValues.shared.string(forKey: .bookCompletionShareButtonVariantAB)
+        return BookCompletionShareButtonVariant(rawValue: raw) ?? .original
     }
 }
 

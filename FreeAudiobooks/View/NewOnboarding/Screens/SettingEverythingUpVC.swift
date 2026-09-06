@@ -158,7 +158,7 @@ final class SettingEverythingUpVC: BaseNewOnboardingVC {
             center
         ])
 
-        configure(percentLabel, font: .monospacedDigitSystemFont(ofSize: 64, weight: .bold), style: .largeTitle)
+        configure(percentLabel, font: .monospacedDigitSystemFont(ofSize: 64, weight: .bold))
         percentLabel.text = "0%"
         percentLabel.textAlignment = .center
         // The changing number and the bar share a single accessible value.
@@ -167,11 +167,11 @@ final class SettingEverythingUpVC: BaseNewOnboardingVC {
         percentLabel.accessibilityTraits = .updatesFrequently
 
         let headline = UILabel()
-        configure(headline, font: Fonts.semiBold28, style: .title1)
+        configure(headline, font: Fonts.semiBold28)
         headline.text = RCValues.shared.string(forKey: .onbSettingEverythingUpTitle)
         headline.textAlignment = .center
         headline.accessibilityTraits = .header
-        configure(statusLabel, font: Fonts.regular17, style: .body)
+        configure(statusLabel, font: Fonts.regular17)
         statusLabel.textAlignment = .center
         statusLabel.textColor = Colours.textSecondary
         statusLabel.text = SettingEverythingUpSchedule.statusLine(at: 0)
@@ -197,9 +197,8 @@ final class SettingEverythingUpVC: BaseNewOnboardingVC {
         column.addArrangedSubview(list)
     }
 
-    private func configure(_ label: UILabel, font: UIFont, style: UIFont.TextStyle) {
-        label.font = UIFontMetrics(forTextStyle: style).scaledFont(for: font)
-        label.adjustsFontForContentSizeCategory = true
+    private func configure(_ label: UILabel, font: UIFont) {
+        label.font = font
         label.textColor = Colours.textPrimary
         label.numberOfLines = 0
     }
@@ -210,7 +209,7 @@ final class SettingEverythingUpVC: BaseNewOnboardingVC {
         row.accessibilityLabel = text
         row.accessibilityValue = "Not yet"
         let label = UILabel()
-        configure(label, font: Fonts.regular17, style: .body)
+        configure(label, font: Fonts.regular17)
         label.text = text
         label.isAccessibilityElement = false
         let tick = UIImageView(image: UIImage(systemName: "circle"))

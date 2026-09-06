@@ -20,8 +20,12 @@
 	<string>Help other listeners discover this audiobook with a review.</string>
 	<key>bookCompletionReviewPlaceholderTextAB</key>
 	<string>I couldn&apos;t stop listening. The characters felt so real and I loved where the story went.</string>
-	<key>bookCompletionShareButtonTitle</key>
-	<string>Share</string>
+	<key>bookCompletionShareButtonTitleAB</key>
+	<string>Send</string>
+	<key>bookCompletionShareButtonVariantAB</key>
+	<string>original</string>
+	<key>shouldShowBookReviewAuthorShareAB</key>
+	<false/>
 	<key>bookCompletionTitleLabel</key>
 	<string>Nice work!</string>
 	<key>bookReviewVariantAB</key>

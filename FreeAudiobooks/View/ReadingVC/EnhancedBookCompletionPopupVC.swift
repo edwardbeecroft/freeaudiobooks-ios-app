@@ -14,6 +14,8 @@ import Kingfisher
 
 final class EnhancedBookCompletionPopupVC: BottomSheetController {
 
+    typealias RatingSubmission = (Double, ReadableContentMetadata, ReviewedContentType, String?, @escaping (ContentRatingManager.BookReviewResult) -> Void) -> Void
+
     // MARK: - Types
 
     private enum Stage {
@@ -28,6 +30,9 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
     private let metadata: ReadableContentMetadata
     private let reviewedContentType: ReviewedContentType
     private let audioData: CDBookInternalAudio?
+    private let analytics: AnalyticsManager
+    private let recordRating: RatingSubmission
+    private let reviewAnalyticsContext: BookReviewAnalyticsContext
 
     private var currentStage: Stage = .main
     private var loadingIndicatorView: NVActivityIndicatorView?
@@ -35,7 +40,10 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
     private var shareTopSpacerMinHeightConstraint: NSLayoutConstraint?
     private var shareBottomSpacerMinHeightConstraint: NSLayoutConstraint?
     private var hasFeedbackFieldAppeared = false
-    private let bookReviewVariant = BookReviewVariant.current
+    private let bookReviewVariant: BookReviewVariant
+    private let shareButtonVariant: BookCompletionShareButtonVariant
+    private var hasTrackedExposure = false
+    private var isSubmittingRating = false
 
     private var shouldHideContinueUntilRating: Bool {
         bookReviewVariant == .originalRatingRequired
@@ -134,6 +142,7 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
         textView.layer.cornerRadius = UIConstants.shared.cardCornerRadius
         textView.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
         textView.isScrollEnabled = true
+        textView.returnKeyType = .done
         textView.delegate = self
         return textView
     }()
@@ -184,9 +193,52 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
 
     private lazy var continueButton: UIButton = {
         let button = Buttons.primaryCTA(buttonTitle: "Continue")
+        button.accessibilityIdentifier = "bookCompletionContinue"
         button.addTarget(self, action: #selector(continueTapped), for: .touchUpInside)
         return button
     }()
+
+    private lazy var authorShareButton: UIButton = {
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = "Share review with author"
+        configuration.imagePadding = 10
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0)
+        configuration.titleLineBreakMode = .byWordWrapping
+        configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
+            var attributes = attributes
+            attributes.font = Fonts.regular14
+            return attributes
+        }
+        let button = UIButton(configuration: configuration)
+        button.contentHorizontalAlignment = .center
+        button.isHidden = true
+        button.alpha = 0
+        button.titleLabel?.numberOfLines = 0
+        button.accessibilityIdentifier = "bookCompletionAuthorShare"
+        button.accessibilityLabel = "Share review with author"
+        button.configurationUpdateHandler = Self.updateAuthorShareAppearance
+        let minimumHeight = button.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
+        minimumHeight.priority = UILayoutPriority(999)
+        minimumHeight.isActive = true
+        button.addTarget(self, action: #selector(authorShareTapped), for: .touchUpInside)
+        Self.updateAuthorShareAppearance(button)
+        return button
+    }()
+
+    private static func updateAuthorShareAppearance(_ button: UIButton) {
+        var configuration = button.configuration
+        configuration?.image = UIImage(
+            systemName: button.isSelected ? "checkmark.square.fill" : "square",
+            withConfiguration: UIImage.SymbolConfiguration(pointSize: 20)
+        )
+        configuration?.background = .clear()
+        configuration?.background.backgroundColorTransformer = UIConfigurationColorTransformer { _ in .clear }
+        configuration?.baseBackgroundColor = .clear
+        configuration?.baseForegroundColor = Colours.textSecondary
+        button.configuration = configuration
+        button.accessibilityValue = button.isSelected ? "Checked" : "Unchecked"
+        button.accessibilityTraits = button.isSelected ? [.button, .selected] : [.button]
+    }
 
     // MARK: - UI Elements - Share Stage
 
@@ -247,10 +299,30 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
     private lazy var shareButton: UIButton = {
         let button = Buttons.transparentButtonWithBorder(
             borderColor: Colours.ctaBackground.cgColor,
-            buttonTitle: RCValues.shared.string(forKey: .bookCompletionShareButtonTitle),
+            buttonTitle: shareButtonVariant == .shareWithShareIcon ? "Share" : RCValues.shared.string(forKey: .bookCompletionShareButtonTitleAB),
             titleColor: Colours.ctaBackground
         )
         button.layer.cornerRadius = UIConstants.shared.fullButtonCornerRadius
+        button.accessibilityIdentifier = "bookCompletionSend"
+        let sourceImage: UIImage?
+        switch shareButtonVariant {
+        case .original:
+            sourceImage = nil
+        case .originalWithShareIcon:
+            sourceImage = UIImage(named: "send-book")
+        case .shareWithShareIcon:
+            sourceImage = UIImage(systemName: "square.and.arrow.up", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        }
+        if let sourceImage {
+            let iconSize = CGSize(width: 18 * sourceImage.size.width / sourceImage.size.height, height: 18)
+            let icon = UIGraphicsImageRenderer(size: iconSize).image { _ in
+                sourceImage.draw(in: CGRect(origin: .zero, size: iconSize))
+            }
+            button.setImage(icon.withRenderingMode(.alwaysTemplate), for: .normal)
+            let verticalOffset: CGFloat = shareButtonVariant == .shareWithShareIcon ? -1 : 0
+            button.imageEdgeInsets = UIEdgeInsets(top: verticalOffset, left: -3, bottom: -verticalOffset, right: 3)
+            button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 3, bottom: 0, right: -3)
+        }
         button.addTarget(self, action: #selector(shareTapped), for: .touchUpInside)
         return button
     }()
@@ -263,13 +335,31 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
 
     // MARK: - Init
 
-    init(metadata: ReadableContentMetadata, reviewedContentType: ReviewedContentType, audioData: CDBookInternalAudio? = nil) {
+    init(
+        metadata: ReadableContentMetadata,
+        reviewedContentType: ReviewedContentType,
+        audioData: CDBookInternalAudio? = nil,
+        bookReviewVariant: BookReviewVariant = .current,
+        shareButtonVariant: BookCompletionShareButtonVariant = .current,
+        shouldShowBookReviewAuthorShare: Bool = RCValues.shared.bool(forKey: .shouldShowBookReviewAuthorShareAB),
+        analytics: AnalyticsManager = .shared,
+        recordRating: @escaping RatingSubmission = { rating, content, type, comment, completion in
+            ContentRatingManager.shared.recordRating(rating, content: content, type: type, comment: comment, completion: completion)
+        }
+    ) {
         self.metadata = metadata
         self.reviewedContentType = reviewedContentType
         self.audioData = audioData
+        self.bookReviewVariant = bookReviewVariant
+        self.shareButtonVariant = shareButtonVariant
+        self.analytics = analytics
+        self.recordRating = recordRating
+        self.reviewAnalyticsContext = BookReviewAnalyticsContext(
+            showsAuthorShare: shouldShowBookReviewAuthorShare,
+            bookReviewVariant: bookReviewVariant,
+            contentType: reviewedContentType
+        )
         super.init(nibName: nil, bundle: nil)
-
-        AnalyticsManager.shared.trackEnhancedBookCompletionViewed()
         
         HapticFeedbackHelper.shared.prepareSuccessFeedbackGenerator()
         createView()
@@ -288,6 +378,10 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        if !hasTrackedExposure {
+            hasTrackedExposure = true
+            analytics.trackEnhancedBookCompletionViewed(context: reviewAnalyticsContext)
+        }
         congratsAnimationView.play()
         HapticFeedbackHelper.shared.triggerSuccessHaptic()
     }
@@ -490,7 +584,7 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
         feedbackContainer.alpha = 0
 
         // Rating card - contains prompt, stars, and feedback
-        let ratingCardArrangedSubviews: [UIView]
+        var ratingCardArrangedSubviews: [UIView]
         if bookReviewVariant == .reviewStyle {
             ratingCardArrangedSubviews = [
                 reviewIntroLabel,
@@ -504,6 +598,10 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
                 starContainer,
                 feedbackContainer
             ]
+        }
+
+        if reviewAnalyticsContext.showsAuthorShare {
+            ratingCardArrangedSubviews.append(authorShareButton)
         }
 
         let ratingCardStack = UIStackView(arrangedSubviews: ratingCardArrangedSubviews)
@@ -697,7 +795,7 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
             shareContainerView.isUserInteractionEnabled = stage == .share
 
             if stage == .share {
-                AnalyticsManager.shared.trackEnhancedBookCompletionShareViewed()
+                analytics.trackEnhancedBookCompletionShareViewed()
                 if animated {
                     animateCoverEntrance()
                 }
@@ -720,7 +818,7 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
 
         // Animate badge/cover and track analytics when entering share stage
         if stage == .share {
-            AnalyticsManager.shared.trackEnhancedBookCompletionShareViewed()
+            analytics.trackEnhancedBookCompletionShareViewed()
             if animated {
                 animateCoverEntrance()
             }
@@ -767,6 +865,12 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
 
     // MARK: - Actions
 
+    @objc private func authorShareTapped() {
+        guard reviewAnalyticsContext.showsAuthorShare, hasFeedbackFieldAppeared, !isSubmittingRating else { return }
+        authorShareButton.isSelected.toggle()
+        Self.updateAuthorShareAppearance(authorShareButton)
+    }
+
     @objc private func handleTapToDismissKeyboard() {
         view.endEditing(true)
     }
@@ -791,6 +895,10 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
 
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5) {
             self.feedbackContainer.alpha = 1
+            if self.reviewAnalyticsContext.showsAuthorShare {
+                self.authorShareButton.isHidden = false
+                self.authorShareButton.alpha = 1
+            }
             self.view.layoutIfNeeded()
         } completion: { _ in
             self.preferredSheetSizing = .fit
@@ -798,35 +906,56 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
     }
 
     @objc private func continueTapped() {
+        guard currentStage == .main, !isSubmittingRating else { return }
         view.endEditing(true)
 
         let rating = starRatingView.rating
 
         if rating > 0 {
+            isSubmittingRating = true
+            mainContainerView.isUserInteractionEnabled = false
+            let comment: String? = feedbackTextView.text.isEmpty ? nil : feedbackTextView.text
+            let hasComment = !(comment ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            let authorShareSelected = reviewAnalyticsContext.showsAuthorShare && authorShareButton.isSelected
             showLoadingIndicator(show: true)
 
             // Track analytics
             switch reviewedContentType {
             case .bookInternal:
-                guard let genre = (metadata as? CDBookInternal)?.genre else { return }
-                AnalyticsManager.shared.trackBookInternalRatingSubmitted(rating: rating, genre: genre)
+                if let genre = (metadata as? CDBookInternal)?.genre {
+                    analytics.trackBookInternalRatingSubmitted(rating: rating, genre: genre)
+                }
             case .bookInternalAudiobook:
-                guard let genre = (metadata as? CDBookInternal)?.genre else { return }
-                AnalyticsManager.shared.trackBookInternalAudiobookRatingSubmitted(rating: rating, genre: genre)
+                if let genre = (metadata as? CDBookInternal)?.genre {
+                    analytics.trackBookInternalAudiobookRatingSubmitted(rating: rating, genre: genre)
+                }
             }
-
-            let comment: String? = feedbackTextView.text.isEmpty ? nil : feedbackTextView.text
 
             // This will only work for internal books/audiobooks, but that's fine
             if comment != nil, let genre = (metadata as? CDBookInternal)?.genre {
-                AnalyticsManager.shared.trackBookRatingSubmittedWithComment(rating: rating, genre: genre)
+                analytics.trackBookRatingSubmittedWithComment(rating: rating, genre: genre)
             }
 
-            ContentRatingManager.shared.recordRating(rating, content: metadata, type: reviewedContentType, comment: comment) { [weak self] result in
+            recordRating(rating, metadata, reviewedContentType, comment) { [weak self] result in
                 guard let self = self else { return }
 
                 switch result {
                 case .success(let response):
+                    guard response.success else { break }
+                    let review = BookRatingAnalytics(
+                        context: self.reviewAnalyticsContext,
+                        rating: rating,
+                        hasComment: hasComment,
+                        authorShareSelected: authorShareSelected,
+                        isUpdate: response.isUpdate
+                    )
+                    self.analytics.trackBookRated(review: review)
+                    if hasComment {
+                        self.analytics.trackBookRatedWithComment(review: review)
+                    }
+                    if authorShareSelected {
+                        self.analytics.trackBookRatedWithAuthorShare(review: review)
+                    }
                     print("✅ Successfully submitted rating. New rating: \(response.newRating), Total ratings: \(response.newNumberOfRatings)")
 
                     // Update local CoreData with new ratings based on content type
@@ -863,6 +992,8 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
                     } else {
                         self.dismissHandler?()
                     }
+                    self.isSubmittingRating = false
+                    self.mainContainerView.isUserInteractionEnabled = self.currentStage == .main
                 }
             }
         } else {
@@ -872,7 +1003,7 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
     }
 
     @objc private func shareTapped() {
-        AnalyticsManager.shared.trackEnhancedBookCompletionShareTapped()
+        analytics.trackEnhancedBookCompletionShareTapped()
 
         let bookTitle = metadata.title ?? "a great story"
         let shareText: String
@@ -890,7 +1021,7 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
         let activityVC = UIActivityViewController(activityItems: [shareText, url], applicationActivities: nil)
         activityVC.completionWithItemsHandler = { [weak self] (activityType: UIActivity.ActivityType?, completed: Bool, returnedItems: [Any]?, error: Error?) in
             if completed {
-                AnalyticsManager.shared.trackEnhancedBookCompletionShareCompleted()
+                self?.analytics.trackEnhancedBookCompletionShareCompleted()
             }
             self?.dismissHandler?()
         }
@@ -904,7 +1035,7 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
     }
 
     @objc private func skipTapped() {
-        AnalyticsManager.shared.trackEnhancedBookCompletionShareSkipped()
+        analytics.trackEnhancedBookCompletionShareSkipped()
         dismissHandler?()
     }
 
@@ -963,6 +1094,9 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
         feedbackTextView.backgroundColor = Colours.surfacePrimary
         feedbackTextView.layer.borderColor = Colours.inputBorder.cgColor
         feedbackPlaceholderLabel.textColor = Colours.subtext
+        if reviewAnalyticsContext.showsAuthorShare {
+            authorShareButton.setNeedsUpdateConfiguration()
+        }
         reviewIntroLabel.textColor = Colours.subtext
         reviewIntroLabel.textAlignment = .center
         ratingPromptLabel.textColor = Colours.subtext
@@ -973,6 +1107,7 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
         shareTitleLabel.textColor = Colours.textPrimary
         let shareCTAColor = Colours.ctaBackground
         shareButton.setTitleColor(shareCTAColor, for: .normal)
+        shareButton.tintColor = shareCTAColor
         shareButton.layer.borderColor = shareCTAColor.cgColor
         shareButton.layer.borderWidth = 1
     }
@@ -1026,6 +1161,14 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
 // MARK: - UITextViewDelegate
 
 extension EnhancedBookCompletionPopupVC: UITextViewDelegate {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        if text == "\n" {
+            textView.resignFirstResponder()
+            return false
+        }
+        return true
+    }
+
     func textViewDidChange(_ textView: UITextView) {
         feedbackPlaceholderLabel.isHidden = !textView.text.isEmpty
     }
@@ -1036,8 +1179,10 @@ extension EnhancedBookCompletionPopupVC: UITextViewDelegate {
 extension EnhancedBookCompletionPopupVC: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         // Don't recognize tap if it's on a button (let the button handle it)
-        if touch.view is UIButton {
-            return false
+        var touchedView = touch.view
+        while let view = touchedView {
+            if view is UIControl { return false }
+            touchedView = view.superview
         }
         return true
     }

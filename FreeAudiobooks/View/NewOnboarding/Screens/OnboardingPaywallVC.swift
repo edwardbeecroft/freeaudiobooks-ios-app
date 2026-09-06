@@ -109,7 +109,13 @@ class OnboardingPaywallVC: BaseNewOnboardingVC {
             }
         }
 
-        Superwall.shared.register(placement: placement.rawValue, params: nil, handler: handler)
+        var params: [String: Any] = [:]
+        if let firstName = AccountManager.shared.user?.firstName.trimmingCharacters(in: .whitespacesAndNewlines),
+           !firstName.isEmpty {
+            params["firstName"] = firstName
+        }
+
+        Superwall.shared.register(placement: placement.rawValue, params: params, handler: handler)
     }
 
     private func showLoadingIndicator(show: Bool) {

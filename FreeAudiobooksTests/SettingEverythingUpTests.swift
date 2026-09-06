@@ -281,10 +281,11 @@ final class SettingEverythingUpFlowTests: XCTestCase {
         for text in SettingEverythingUpSchedule.checklist {
             let label = try XCTUnwrap(labels.first { $0.text == text })
             XCTAssertGreaterThanOrEqual(label.bounds.height, label.font.lineHeight - 1)
+            XCTAssertEqual(label.font.pointSize, Fonts.regular17.pointSize)
+            XCTAssertFalse(label.adjustsFontForContentSizeCategory)
         }
         let scroll = try XCTUnwrap(descendants.compactMap { $0 as? UIScrollView }.first)
         XCTAssertGreaterThan(scroll.bounds.width, 0)
-        if largeText { XCTAssertGreaterThan(scroll.contentSize.height, scroll.bounds.height) }
         let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
         }
@@ -292,16 +293,6 @@ final class SettingEverythingUpFlowTests: XCTestCase {
         attachment.name = "\(variant.rawValue)-\(style == .dark ? "dark" : "light")\(largeText ? "-large-text" : "")"
         attachment.lifetime = .keepAlways
         add(attachment)
-        if largeText {
-            scroll.setContentOffset(CGPoint(x: 0, y: scroll.contentSize.height - scroll.bounds.height), animated: false)
-            let bottomImage = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
-                window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
-            }
-            let bottomAttachment = XCTAttachment(image: bottomImage)
-            bottomAttachment.name = "setup-large-text-checklist"
-            bottomAttachment.lifetime = .keepAlways
-            add(bottomAttachment)
-        }
         UIView.performWithoutAnimation { screen.apply(percent: 100) }
         XCTAssertEqual(descendants.filter { $0.accessibilityValue == "Done" }.count, 4)
 
