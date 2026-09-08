@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CA460907AB00000000000001 /* EmailLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460907AB00000000000002 /* EmailLifecycleTests.swift */; };
 		0D20A1012F3E100100AA0001 /* SearchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A1022F3E100100AA0001 /* SearchVC.swift */; };
 		0D20A5012F3E300100AA0001 /* ContinueReadingStoryCVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A5022F3E300100AA0001 /* ContinueReadingStoryCVC.swift */; };
 		0D20A5032F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A5042F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift */; };
@@ -372,6 +371,7 @@
 		C1857CD6FFA64BA7DAF6F7A0 /* SignInEmailVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02308EAE4BDA1ED2D4DCFB1 /* SignInEmailVC.swift */; };
 		CA460906AB00000000000001 /* BookReviewAuthorShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */; };
 		CA460906AB00000000000003 /* send-book.png in Resources */ = {isa = PBXBuildFile; fileRef = CA460906AB00000000000004 /* send-book.png */; };
+		CA460907AB00000000000001 /* EmailLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460907AB00000000000002 /* EmailLifecycleTests.swift */; };
 		CDFF0A840E87F446B61C53EA /* Pods_FreeAudiobooks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82A61B65A9DCD1EE5553165F /* Pods_FreeAudiobooks.framework */; };
 		DA0B24A92F3A91D500F1C3E7 /* HomeSkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0B24A82F3A91D500F1C3E7 /* HomeSkeletonView.swift */; };
 		E502478A22B126E8004B6FB0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E502478922B126E8004B6FB0 /* LaunchScreen.storyboard */; };
@@ -475,7 +475,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		CA460907AB00000000000002 /* EmailLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailLifecycleTests.swift; sourceTree = "<group>"; };
 		0D20A1022F3E100100AA0001 /* SearchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchVC.swift; sourceTree = "<group>"; };
 		0D20A5022F3E300100AA0001 /* ContinueReadingStoryCVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinueReadingStoryCVC.swift; sourceTree = "<group>"; };
 		0D20A5042F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinueReadingPlaceholderCVC.swift; sourceTree = "<group>"; };
@@ -847,6 +846,7 @@
 		C7FE11401737151BA8589DF1 /* Pods-FreeAudiobooksTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FreeAudiobooksTests.debug.xcconfig"; path = "Target Support Files/Pods-FreeAudiobooksTests/Pods-FreeAudiobooksTests.debug.xcconfig"; sourceTree = "<group>"; };
 		CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReviewAuthorShareTests.swift; sourceTree = "<group>"; };
 		CA460906AB00000000000004 /* send-book.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "send-book.png"; sourceTree = "<group>"; };
+		CA460907AB00000000000002 /* EmailLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailLifecycleTests.swift; sourceTree = "<group>"; };
 		D02308EAE4BDA1ED2D4DCFB1 /* SignInEmailVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInEmailVC.swift; sourceTree = "<group>"; };
 		D90C18E7103310AF938B6B97 /* Pods-FreeAudiobooks.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FreeAudiobooks.debug.xcconfig"; path = "Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks.debug.xcconfig"; sourceTree = "<group>"; };
 		DA0B24A82F3A91D500F1C3E7 /* HomeSkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSkeletonView.swift; sourceTree = "<group>"; };
@@ -3134,7 +3134,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = FreeAudiobooks/FreeAudiobooks.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 3TXPQ677VN;
 				INFOPLIST_FILE = "$(SRCROOT)/FreeAudiobooks/Info.plist";
@@ -3145,7 +3145,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.3;
+				MARKETING_VERSION = 2.1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.freeaudiobooks.ios;
 				PRODUCT_MODULE_NAME = FreeAudiobooks;
 				PRODUCT_NAME = FreeAudiobooks;
@@ -3162,7 +3162,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = FreeAudiobooks/FreeAudiobooks.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3TXPQ677VN;
 				INFOPLIST_FILE = "$(SRCROOT)/FreeAudiobooks/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = FreeAudiobooks;
@@ -3172,7 +3172,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.3;
+				MARKETING_VERSION = 2.1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.freeaudiobooks.ios;
 				PRODUCT_MODULE_NAME = FreeAudiobooks;
 				PRODUCT_NAME = FreeAudiobooks;
