@@ -66,6 +66,8 @@
 	<string>Find your next great listen</string>
 	<key>emailOptInDetailViewTitlePaid</key>
 	<string>Get personalized picks</string>
+	<key>emailUSAutoEnrolEnabled</key>
+	<false/>
 	<key>emailOptInOnboardingTitleAB</key>
 	<string>Find your next great listen</string>
 	<key>engagementNotificationsDaysDelay</key>

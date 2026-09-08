@@ -263,6 +263,9 @@ enum RCKeys: String {
     case emailOptInDetailViewTitleAB
     case emailOptInDetailViewTitlePaid
 
+    // USA automatic email enrolment (defaults to off in both apps)
+    case emailUSAutoEnrolEnabled
+
     // Email Opt-In Prompt - New Onboarding Trigger
     case emailOptInOnboardingTitleAB
 

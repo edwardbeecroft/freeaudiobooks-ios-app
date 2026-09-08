@@ -26,13 +26,14 @@ final class EmailLifecycleTests: XCTestCase {
         XCTAssertNil(DeeplinkManager.shared.getLaunchActionFromDeeplinkURL(url: URL(string: "https://links.freeaudiobooksapp.com/book-internal")!))
     }
     func testAutoEnrolRequiresFirstAppOnboardingWithoutPreviousChoice() {
-        func eligible(country: String = "USA", email: String = "reader@example.com", fresh: Bool = true,
+        func eligible(enabled: Bool = true, country: String = "USA", email: String = "reader@example.com", fresh: Bool = true,
                       isEmailSubscribed: Bool = false, answered: Bool = false, isEmailUnsubscribed: Bool = false,
                       dismissed: Bool = false) -> Bool {
-            EmailMarketingService.shouldAutoEnrol(country: country, email: email, isFirstAppOnboarding: fresh,
+            EmailMarketingService.shouldAutoEnrol(enabled: enabled, country: country, email: email, isFirstAppOnboarding: fresh,
                 isEmailSubscribed: isEmailSubscribed, previouslyAnswered: answered, isEmailUnsubscribed: isEmailUnsubscribed, dismissed: dismissed)
         }
         XCTAssertTrue(eligible())
+        XCTAssertFalse(eligible(enabled: false))
         XCTAssertFalse(eligible(country: ""))
         XCTAssertFalse(eligible(country: "GBR"))
         XCTAssertFalse(eligible(email: ""))

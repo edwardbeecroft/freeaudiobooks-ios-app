@@ -83,10 +83,10 @@ final class EmailMarketingService {
         return data
     }
 
-    static func shouldAutoEnrol(country: String, email: String, isFirstAppOnboarding: Bool,
+    static func shouldAutoEnrol(enabled: Bool, country: String, email: String, isFirstAppOnboarding: Bool,
                                isEmailSubscribed: Bool, previouslyAnswered: Bool,
                                isEmailUnsubscribed: Bool, dismissed: Bool) -> Bool {
-        country == "USA" && !email.isEmpty && isFirstAppOnboarding && !isEmailSubscribed &&
+        enabled && country == "USA" && !email.isEmpty && isFirstAppOnboarding && !isEmailSubscribed &&
             !previouslyAnswered && !isEmailUnsubscribed && !dismissed
     }
 

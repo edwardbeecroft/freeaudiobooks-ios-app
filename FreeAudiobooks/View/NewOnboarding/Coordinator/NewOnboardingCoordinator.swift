@@ -269,6 +269,7 @@ class NewOnboardingCoordinator {
     private func showEmailOptInIfNeeded(isFirstAppOnboarding: Bool, completion: @escaping () -> Void) {
         if let user = AccountManager.shared.user {
             let autoEnrol = EmailMarketingService.shouldAutoEnrol(
+                enabled: RCValues.shared.bool(forKey: .emailUSAutoEnrolEnabled),
                 country: EmailMarketingService.storefrontCountryCode, email: user.emailAddress,
                 isFirstAppOnboarding: isFirstAppOnboarding,
                 isEmailSubscribed: user.marketingPermission, previouslyAnswered: user.marketingPromptAnswered,
