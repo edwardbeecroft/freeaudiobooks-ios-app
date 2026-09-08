@@ -412,7 +412,7 @@ class NewOnboardingCoordinator {
                           "listeningOccasions", "listeningReasons", "readingBarriers", "dailyListeningGoal"]
         var update = data.filter { answerKeys.contains($0.key) }
         update.merge(EmailMarketingService.profileData(data)) { _, new in new }
-        AccountManager.shared.updateUserWithData(update, completion: nil)
+        EmailMarketingService.saveEmailChange(update, completion: nil)
     }
 
     /// Restores dataStore from UserDefaults when resuming

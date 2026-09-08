@@ -30,6 +30,18 @@ final class EmailMarketingService {
         AccountManager.shared.updateUserWithData(profileData(values), completion: completion)
     }
 
+    /// Atomically save an email change and wake its backend handler. Offline batches stay queued.
+    static func saveEmailChange(_ userData: [String: Any], completion: ((Bool) -> Void)? = nil) {
+        guard let uid = Auth.auth().currentUser?.uid else { completion?(false); return }
+        let firestore = Firestore.firestore()
+        let user = firestore.collection("users").document(uid)
+        let batch = firestore.batch()
+        batch.setData(userData, forDocument: user, merge: true)
+        batch.setData(["updatedAt": FieldValue.serverTimestamp()],
+                      forDocument: user.collection("emailRequests").document(appID))
+        batch.commit { error in completion?(error == nil) }
+    }
+
     static var storefrontCountryCode: String {
         let defaults = UserDefaults.standard
         if AppConstants.shared.developmentMode != .production,
@@ -93,9 +105,9 @@ final class EmailMarketingService {
     func recordDismissal() {
         guard let user = AccountManager.shared.user else { return }
         user.marketingPromptDismissedAt = Date()
-        Self.updateProfile([
+        Self.saveEmailChange(Self.profileData([
             "marketingPromptDismissedAt": FieldValue.serverTimestamp()
-        ], completion: nil)
+        ]), completion: nil)
     }
 
     func setPreference(subscribed: Bool, source: String, completion: ((Bool) -> Void)? = nil) {
@@ -119,7 +131,7 @@ final class EmailMarketingService {
             data["marketingUnsubscribeSource"] = source
         }
         // Completion means acknowledged by Firestore; the UI need not wait to continue.
-        Self.updateProfile(data) { success in
+        Self.saveEmailChange(Self.profileData(data)) { success in
             guard Auth.auth().currentUser?.uid == uid else { return }
             if !success, user.marketingConsentAmendedDate == now {
                 user.marketingPermission = previous.0

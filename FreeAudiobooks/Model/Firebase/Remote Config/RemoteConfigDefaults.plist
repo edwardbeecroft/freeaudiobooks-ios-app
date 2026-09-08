@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>emailOptInSubtitleAB</key>
+	<string>Fresh listens from the genres you love, straight to your inbox. Unsubscribe anytime.</string>
+	<key>emailOptInCTAAB</key>
+	<string>Send Me Recommendations</string>
 	<key>allowSKReviewOnFirstLaunch</key>
 	<true/>
 	<key>accountShareWithFriendsCellText</key>
@@ -50,46 +54,18 @@
 	<string>https://discord.gg/gukCXgg5yP</string>
 	<key>discoverEarlyAccessUnlockCTATitle</key>
 	<string>Try Free</string>
-	<key>emailOptInBookCompletedCTA</key>
-	<string>Send Me Recommendations</string>
-	<key>emailOptInBookCompletedCTAPaid</key>
-	<string>Send Me Recommendations</string>
-	<key>emailOptInBookCompletedSubtitleAB</key>
-	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
-	<key>emailOptInBookCompletedSubtitlePaid</key>
-	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInBookCompletedTitle</key>
 	<string>Keep the momentum going</string>
 	<key>emailOptInBookCompletedTitlePaidAB</key>
 	<string>Keep discovering great listens</string>
-	<key>emailOptInBookSavedCTAAB</key>
-	<string>Send Me Recommendations</string>
-	<key>emailOptInBookSavedCTAPaidAB</key>
-	<string>Send Me Recommendations</string>
-	<key>emailOptInBookSavedSubtitle</key>
-	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
-	<key>emailOptInBookSavedSubtitlePaid</key>
-	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInBookSavedTitle</key>
 	<string>Want more like this?</string>
 	<key>emailOptInBookSavedTitlePaid</key>
 	<string>Want more like this?</string>
-	<key>emailOptInDetailViewCTA</key>
-	<string>Send Me Recommendations</string>
-	<key>emailOptInDetailViewCTAPaid</key>
-	<string>Send Me Recommendations</string>
-	<key>emailOptInDetailViewSubtitle</key>
-	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
-	<key>emailOptInDetailViewSubtitlePaid</key>
-	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInDetailViewTitleAB</key>
 	<string>Find your next great listen</string>
 	<key>emailOptInDetailViewTitlePaid</key>
 	<string>Get personalized picks</string>
-	<key>emailOptInOnboardingCTAAB</key>
-	<string>Send Me Recommendations</string>
-	<key>emailOptInOnboardingSubtitle</key>
-	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInOnboardingTitleAB</key>
 	<string>Find your next great listen</string>
 	<key>engagementNotificationsDaysDelay</key>

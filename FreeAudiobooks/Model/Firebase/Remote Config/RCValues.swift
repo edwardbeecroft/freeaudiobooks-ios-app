@@ -247,34 +247,24 @@ enum RCKeys: String {
     case bookReviewVariantAB
     case shouldShowBookReviewAuthorShareAB
 
+    // Shared email opt-in button text
+    case emailOptInCTAAB
+    case emailOptInSubtitleAB
+
     // Email Opt-In Prompt - Book Saved Trigger
     case emailOptInBookSavedTitle
-    case emailOptInBookSavedSubtitle
-    case emailOptInBookSavedCTAAB
     case emailOptInBookSavedTitlePaid
-    case emailOptInBookSavedSubtitlePaid
-    case emailOptInBookSavedCTAPaidAB
 
     // Email Opt-In Prompt - Book Completed Trigger
     case emailOptInBookCompletedTitle
-    case emailOptInBookCompletedSubtitleAB
-    case emailOptInBookCompletedCTA
     case emailOptInBookCompletedTitlePaidAB
-    case emailOptInBookCompletedSubtitlePaid
-    case emailOptInBookCompletedCTAPaid
 
     // Email Opt-In Prompt - 5th Detail View Trigger
     case emailOptInDetailViewTitleAB
-    case emailOptInDetailViewSubtitle
-    case emailOptInDetailViewCTA
     case emailOptInDetailViewTitlePaid
-    case emailOptInDetailViewSubtitlePaid
-    case emailOptInDetailViewCTAPaid
 
     // Email Opt-In Prompt - New Onboarding Trigger
     case emailOptInOnboardingTitleAB
-    case emailOptInOnboardingSubtitle
-    case emailOptInOnboardingCTAAB
 
     // Reading
     case defaultReaderTheme

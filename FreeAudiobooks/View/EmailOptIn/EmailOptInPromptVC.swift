@@ -89,7 +89,7 @@ final class EmailOptInPromptVC: BottomSheetController {
         let subtitleLabel = UILabel()
         subtitleLabel.font = Fonts.medium15
         subtitleLabel.textColor = Colours.textSecondary
-        subtitleLabel.text = trigger.subtitle(forSubscriber: isSubscriber)
+        subtitleLabel.text = RCValues.shared.string(forKey: .emailOptInSubtitleAB)
         subtitleLabel.textAlignment = .center
         subtitleLabel.numberOfLines = 0
 
@@ -104,7 +104,7 @@ final class EmailOptInPromptVC: BottomSheetController {
         ])
 
         // Primary CTA Button
-        let primaryButton = Buttons.primaryCTA(buttonTitle: trigger.ctaText(forSubscriber: isSubscriber))
+        let primaryButton = Buttons.primaryCTA(buttonTitle: RCValues.shared.string(forKey: .emailOptInCTAAB))
         primaryButton.addTarget(self, action: #selector(optInTapped), for: .touchUpInside)
 
         // Not now button (secondary)
