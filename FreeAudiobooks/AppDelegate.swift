@@ -51,6 +51,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window?.makeKeyAndVisible()
         
         FirebaseApp.configure()
+        EmailMarketingService.prefetchStorefront()
         
         // Preload Core Data early
         CoreDataManager.shared.setupPersistentStore()
@@ -124,6 +125,17 @@ extension AppDelegate: SuperwallDelegate {
     func subscriptionStatusDidChange(from oldValue: SuperwallKit.SubscriptionStatus, to newValue: SuperwallKit.SubscriptionStatus) {
         let isSubscribed = newValue.isActive
         Analytics.setUserProperty(isSubscribed ? "true" : "false", forName: "is_subscribed")
+        let status: String
+        switch newValue {
+        case .active: status = "active"
+        case .inactive: status = "inactive"
+        case .unknown: status = "unknown"
+        }
+        EmailMarketingService.updateProfile([
+            "subscriptionStatus": status,
+            "subscriptionStatusUpdatedAt": FieldValue.serverTimestamp(),
+            "subscriptionStatusSource": "app"
+        ], completion: nil)
         AccountManager.shared.updateSuperwallUserAttributes()
         NotificationCenter.default.post(name: .didUpdateSubscriberStatus, object: nil)
     }
@@ -177,6 +189,11 @@ extension AppDelegate {
 	
 	func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
 
+        if url.scheme == "freeaudiobooks", let action = DeeplinkManager.shared.getLaunchActionFromDeeplinkURL(url: url) {
+            AnalyticsManager.shared.trackEmailLinkOpened(url: url)
+            handleLaunchAction(action)
+            return true
+        }
         // Handle Google Sign-In
         if GIDSignIn.sharedInstance.handle(url) {
             return true
@@ -395,13 +412,37 @@ extension AppDelegate {
             let launchAction = DeeplinkManager.shared.getLaunchActionFromDeeplinkURL(url: incomingURL) else {
             return false
         }
+        AnalyticsManager.shared.trackEmailLinkOpened(url: incomingURL)
         self.handleLaunchAction(launchAction)
         return true
 	}
 	
+    func handleEmailDiscovery() {
+        if AppNotifiers.shared.tabBarHasLoaded {
+            tabBarController?.selectTab(tab: .discover)
+        } else { AppNotifiers.shared.launchActionNeedsHandling = .emailDiscovery }
+    }
+
+    func handleEmailOffer() {
+        guard AppNotifiers.shared.tabBarHasLoaded, AccountManager.shared.userIsLoggedInToFirebase() else {
+            AppNotifiers.shared.launchActionNeedsHandling = .onboardingEmailDiscount
+            return
+        }
+        if AccountManager.shared.knownUserIsSubscribed == false {
+            Superwall.shared.register(placement: PaywallPlacement.onboardingEmailDiscount.rawValue)
+        } else { handleEmailDiscovery() }
+    }
+
     func handleLaunchAction(_ launchAction: LaunchAction) {
+        guard AppNotifiers.shared.tabBarHasLoaded else {
+            AppNotifiers.shared.launchActionNeedsHandling = launchAction
+            return
+        }
+        AppNotifiers.shared.launchActionNeedsHandling = nil
         switch launchAction {
         case .bookInternal(let bookUUID): handleBookInternalLaunchAction(bookUUID: bookUUID)
+        case .emailDiscovery: handleEmailDiscovery()
+        case .onboardingEmailDiscount: handleEmailOffer()
         case .savedBooks: handleSavedBooksDeeplink()
         case .roadmap: handleRoadmapDeeplink()
         case .section(let sectionUUID): handleSectionDeeplink(sectionUUID: sectionUUID)
@@ -414,12 +455,15 @@ extension AppDelegate {
 	func handleBookInternalLaunchAction(bookUUID: String) {
 		if AppNotifiers.shared.tabBarHasLoaded {
             if let bookMetadata = CoreDataBookInternalManager.shared.getWithUUID(uuid: bookUUID) {
+                guard !bookMetadata.isHidden else { handleEmailDiscovery(); return }
                 showBook(bookMetadata)
             } else {
                 APIBookInternalManager.shared.fetchStoriesWithIDs(uuids: [bookUUID]) { success in
                     guard
                         success,
-                        let bookMetadata = CoreDataBookInternalManager.shared.getWithUUID(uuid: bookUUID) else {
+                        let bookMetadata = CoreDataBookInternalManager.shared.getWithUUID(uuid: bookUUID),
+                        !bookMetadata.isHidden else {
+                            DispatchQueue.main.async { self.handleEmailDiscovery() }
                             return
                     }
                     DispatchQueue.main.async {

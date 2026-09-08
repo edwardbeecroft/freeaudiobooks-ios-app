@@ -7,12 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CA460906AB00000000000001 /* BookReviewAuthorShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */; };
-		CA460906AB00000000000003 /* send-book.png in Resources */ = {isa = PBXBuildFile; fileRef = CA460906AB00000000000004 /* send-book.png */; };
-		C0DE0906AB00000700000001 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000800000001 /* AccountDeletionTests.swift */; };
-		C0DE0906AB00000500000001 /* SettingEverythingUpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */; };
-		C0DE0906AB00000300000001 /* SettingEverythingUpVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */; };
-		C0DE0906AB00000100000001 /* SettingEverythingUpSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000200000001 /* SettingEverythingUpSchedule.swift */; };
+		CA460907AB00000000000001 /* EmailLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460907AB00000000000002 /* EmailLifecycleTests.swift */; };
 		0D20A1012F3E100100AA0001 /* SearchVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A1022F3E100100AA0001 /* SearchVC.swift */; };
 		0D20A5012F3E300100AA0001 /* ContinueReadingStoryCVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A5022F3E300100AA0001 /* ContinueReadingStoryCVC.swift */; };
 		0D20A5032F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A5042F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift */; };
@@ -370,7 +365,13 @@
 		C0DE02020000000000000001 /* ReminderConsistencyStatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE02010000000000000001 /* ReminderConsistencyStatCard.swift */; };
 		C0DE02040000000000000001 /* ReminderTimeSelectionComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE02030000000000000001 /* ReminderTimeSelectionComponents.swift */; };
 		C0DE02060000000000000001 /* ReminderTilesSelectionStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE02050000000000000001 /* ReminderTilesSelectionStateTests.swift */; };
+		C0DE0906AB00000100000001 /* SettingEverythingUpSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000200000001 /* SettingEverythingUpSchedule.swift */; };
+		C0DE0906AB00000300000001 /* SettingEverythingUpVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */; };
+		C0DE0906AB00000500000001 /* SettingEverythingUpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */; };
+		C0DE0906AB00000700000001 /* AccountDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE0906AB00000800000001 /* AccountDeletionTests.swift */; };
 		C1857CD6FFA64BA7DAF6F7A0 /* SignInEmailVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02308EAE4BDA1ED2D4DCFB1 /* SignInEmailVC.swift */; };
+		CA460906AB00000000000001 /* BookReviewAuthorShareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */; };
+		CA460906AB00000000000003 /* send-book.png in Resources */ = {isa = PBXBuildFile; fileRef = CA460906AB00000000000004 /* send-book.png */; };
 		CDFF0A840E87F446B61C53EA /* Pods_FreeAudiobooks.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 82A61B65A9DCD1EE5553165F /* Pods_FreeAudiobooks.framework */; };
 		DA0B24A92F3A91D500F1C3E7 /* HomeSkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0B24A82F3A91D500F1C3E7 /* HomeSkeletonView.swift */; };
 		E502478A22B126E8004B6FB0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E502478922B126E8004B6FB0 /* LaunchScreen.storyboard */; };
@@ -474,12 +475,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReviewAuthorShareTests.swift; sourceTree = "<group>"; };
-		CA460906AB00000000000004 /* send-book.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "send-book.png"; sourceTree = "<group>"; };
-		C0DE0906AB00000800000001 /* AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionTests.swift; sourceTree = "<group>"; };
-		C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpTests.swift; sourceTree = "<group>"; };
-		C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpVC.swift; sourceTree = "<group>"; };
-		C0DE0906AB00000200000001 /* SettingEverythingUpSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpSchedule.swift; sourceTree = "<group>"; };
+		CA460907AB00000000000002 /* EmailLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailLifecycleTests.swift; sourceTree = "<group>"; };
 		0D20A1022F3E100100AA0001 /* SearchVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchVC.swift; sourceTree = "<group>"; };
 		0D20A5022F3E300100AA0001 /* ContinueReadingStoryCVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinueReadingStoryCVC.swift; sourceTree = "<group>"; };
 		0D20A5042F3E300100AA0001 /* ContinueReadingPlaceholderCVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContinueReadingPlaceholderCVC.swift; sourceTree = "<group>"; };
@@ -762,6 +758,7 @@
 		75B1B4952EA13E0600A2A009 /* APIBookReviewsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIBookReviewsManager.swift; sourceTree = "<group>"; };
 		75B1B4992EA1553100A2A009 /* StoryDataRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryDataRatingView.swift; sourceTree = "<group>"; };
 		75B1D85B297D521600E7E161 /* idea.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = idea.png; sourceTree = "<group>"; };
+		75BC051F304F19A0008EAEE9 /* FreeAudiobooksV5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = FreeAudiobooksV5.xcdatamodel; sourceTree = "<group>"; };
 		75BFA7662F4C41110058DAAE /* share-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "share-icon.png"; sourceTree = "<group>"; };
 		75C52C6D2969DF9000A27758 /* PaddedLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaddedLabel.swift; sourceTree = "<group>"; };
 		75CB77582983261C0047C9B9 /* question.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = question.png; sourceTree = "<group>"; };
@@ -843,7 +840,13 @@
 		C0DE02010000000000000001 /* ReminderConsistencyStatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderConsistencyStatCard.swift; sourceTree = "<group>"; };
 		C0DE02030000000000000001 /* ReminderTimeSelectionComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderTimeSelectionComponents.swift; sourceTree = "<group>"; };
 		C0DE02050000000000000001 /* ReminderTilesSelectionStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderTilesSelectionStateTests.swift; sourceTree = "<group>"; };
+		C0DE0906AB00000200000001 /* SettingEverythingUpSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpSchedule.swift; sourceTree = "<group>"; };
+		C0DE0906AB00000400000001 /* SettingEverythingUpVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpVC.swift; sourceTree = "<group>"; };
+		C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingEverythingUpTests.swift; sourceTree = "<group>"; };
+		C0DE0906AB00000800000001 /* AccountDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountDeletionTests.swift; sourceTree = "<group>"; };
 		C7FE11401737151BA8589DF1 /* Pods-FreeAudiobooksTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FreeAudiobooksTests.debug.xcconfig"; path = "Target Support Files/Pods-FreeAudiobooksTests/Pods-FreeAudiobooksTests.debug.xcconfig"; sourceTree = "<group>"; };
+		CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookReviewAuthorShareTests.swift; sourceTree = "<group>"; };
+		CA460906AB00000000000004 /* send-book.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "send-book.png"; sourceTree = "<group>"; };
 		D02308EAE4BDA1ED2D4DCFB1 /* SignInEmailVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInEmailVC.swift; sourceTree = "<group>"; };
 		D90C18E7103310AF938B6B97 /* Pods-FreeAudiobooks.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FreeAudiobooks.debug.xcconfig"; path = "Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks.debug.xcconfig"; sourceTree = "<group>"; };
 		DA0B24A82F3A91D500F1C3E7 /* HomeSkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSkeletonView.swift; sourceTree = "<group>"; };
@@ -1796,6 +1799,7 @@
 				C0DE0906AB00000800000001 /* AccountDeletionTests.swift */,
 				C0DE0906AB00000600000001 /* SettingEverythingUpTests.swift */,
 				CA460906AB00000000000002 /* BookReviewAuthorShareTests.swift */,
+				CA460907AB00000000000002 /* EmailLifecycleTests.swift */,
 				C0DE00010000000E00000001 /* ListeningQuotaManagerTests.swift */,
 				C0DE00040000000100000001 /* AudioPlaybackProgressManagerTests.swift */,
 				C0DE00050000000100000001 /* PersonalizedFeedBuilderTests.swift */,
@@ -2581,9 +2585,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2598,9 +2606,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2638,6 +2650,7 @@
 				C0DE0906AB00000700000001 /* AccountDeletionTests.swift in Sources */,
 				C0DE0906AB00000500000001 /* SettingEverythingUpTests.swift in Sources */,
 				CA460906AB00000000000001 /* BookReviewAuthorShareTests.swift in Sources */,
+				CA460907AB00000000000001 /* EmailLifecycleTests.swift in Sources */,
 				C0DE00010000000D00000001 /* ListeningQuotaManagerTests.swift in Sources */,
 				C0DE00040000000200000001 /* AudioPlaybackProgressManagerTests.swift in Sources */,
 				C0DE00050000000200000001 /* PersonalizedFeedBuilderTests.swift in Sources */,
@@ -3206,12 +3219,13 @@
 		75EF66CC2E64450C007180AD /* FreeAudiobooks.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				75BC051F304F19A0008EAEE9 /* FreeAudiobooksV5.xcdatamodel */,
 				75A3733A2FF7A228005CE7C3 /* FreeAudiobooksV4.xcdatamodel */,
 				75480B042FC6DF58002C3F99 /* FreeAudiobooksV3.xcdatamodel */,
 				75480B022FC6DF58002C3F99 /* FreeAudiobooksV2.xcdatamodel */,
 				75EF66CD2E64450C007180AD /* FreeAudiobooksV1.xcdatamodel */,
 			);
-			currentVersion = 75A3733A2FF7A228005CE7C3 /* FreeAudiobooksV4.xcdatamodel */;
+			currentVersion = 75BC051F304F19A0008EAEE9 /* FreeAudiobooksV5.xcdatamodel */;
 			path = FreeAudiobooks.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

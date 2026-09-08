@@ -36,6 +36,10 @@ class User: NSObject {
     var marketingPromptAnswered: Bool // This property was only added in Sept 2025 - but we default to true
 	var marketingConsentAmendedDate: Date
 	var marketingPermission: Bool
+    var marketingUnsubscribedAt: Date?
+    var marketingPromptDismissedAt: Date?
+    var emailOnboardingCompletedAt: Date?
+    var isFirstAppOnboarding: Bool
 	
 	// Privacy
 	let privacyPolicyConsentMethod: String
@@ -78,8 +82,7 @@ class User: NSObject {
             let completedStoryUUIDs = dict[FirebaseUserVariables.completedStoryUUIDs.rawValue] as? [String],
 			let signInMethod = dict[FirebaseUserVariables.signInMethod.rawValue] as? String,
 			let createdDateTimestamp = dict[FirebaseUserVariables.createdDate.rawValue] as? Timestamp,
-			let marketingPermission = dict[FirebaseUserVariables.marketingPermission.rawValue] as? Bool,
-			let marketingConsentAmendedDate = dict[FirebaseUserVariables.marketingConsentAmendedDate.rawValue] as? Timestamp,
+
 			let privacyPolicyConsentMethod = dict[FirebaseUserVariables.privacyPolicyConsentMethod.rawValue] as? String,
 			let privacyPolicyAcceptDate = dict[FirebaseUserVariables.privacyPolicyAcceptDate.rawValue] as? Timestamp,
             let fcmTokens = dict[FirebaseUserVariables.fcmTokens.rawValue] as? [String] else {
@@ -113,9 +116,16 @@ class User: NSObject {
             self.savedItemsOrder = []
         }
         
-        self.marketingPromptAnswered = dict[FirebaseUserVariables.marketingPromptAnswered.rawValue] as? Bool ?? true
-		self.marketingPermission = marketingPermission
-		self.marketingConsentAmendedDate = marketingConsentAmendedDate.dateValue()
+        let marketing = EmailMarketingService.profile(from: dict)
+        let firstAppOnboarding = EmailMarketingService.isFirstAppOnboarding(in: dict)
+        self.isFirstAppOnboarding = firstAppOnboarding
+        self.marketingPromptAnswered = marketing["marketingPromptAnswered"] as? Bool ?? !firstAppOnboarding
+        self.marketingPermission = marketing["marketingPermission"] as? Bool ?? false
+        self.marketingUnsubscribedAt = (marketing["marketingUnsubscribedAt"] as? Timestamp)?.dateValue()
+        self.marketingPromptDismissedAt = (marketing["marketingPromptDismissedAt"] as? Timestamp)?.dateValue()
+        self.emailOnboardingCompletedAt = (marketing["emailOnboardingCompletedAt"] as? Timestamp)?.dateValue()
+        self.marketingConsentAmendedDate = (marketing["marketingConsentAmendedDate"] as? Timestamp)?.dateValue() ?? .distantPast
+
 
 		self.privacyPolicyConsentMethod = privacyPolicyConsentMethod
 		self.privacyPolicyAcceptDate = privacyPolicyAcceptDate.dateValue()
@@ -134,16 +144,11 @@ class User: NSObject {
         self.listeningQuotaBookUUIDsThisWeek = dict[FirebaseUserVariables.listeningQuotaBookUUIDsThisWeek.rawValue] as? [String] ?? []
         self.listeningQuotaWeekStartedAt = (dict[FirebaseUserVariables.listeningQuotaWeekStartedAt.rawValue] as? Timestamp)?.dateValue()
         
-        if let favoriteGenreStrings = dict[FirebaseUserVariables.favoriteGenres.rawValue] as? [String] {
-            let genreEnums = favoriteGenreStrings.compactMap({ BookInternalGenre(rawValue: $0) })
-            if genreEnums.isEmpty {
-                self.favoriteGenres = []
-            } else {
-                self.favoriteGenres = genreEnums
-            }
-        } else {
-            self.favoriteGenres = []
-        }
+        // Prefer this app's genres; older profiles still use the shared field.
+        let favoriteGenreStrings = marketing["favoriteGenres"] as? [String]
+            ?? dict[FirebaseUserVariables.favoriteGenres.rawValue] as? [String]
+            ?? []
+        self.favoriteGenres = favoriteGenreStrings.compactMap { BookInternalGenre(rawValue: $0) }
 
         // Gamification & Stats - with defaults for existing users
         self.currentStreak = dict[FirebaseUserVariables.currentStreak.rawValue] as? Int ?? 1 // Default to 1 (they're here!)

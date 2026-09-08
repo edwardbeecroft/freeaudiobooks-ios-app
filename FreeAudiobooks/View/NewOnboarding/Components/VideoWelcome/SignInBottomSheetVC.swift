@@ -312,7 +312,7 @@ final class SignInBottomSheetVC: BottomSheetController {
                         AccountManager.shared.addNewDBUserForSocialLogin(
                             firstName: firstName ?? "",
                             lastName: lastName ?? "",
-                            email: email ?? "",
+                            email: email ?? authResult?.user.email ?? "",
                             signupMethod: signInMethod,
                             appleUserIdentifier: appleUserIdentifier
                         ) { success in

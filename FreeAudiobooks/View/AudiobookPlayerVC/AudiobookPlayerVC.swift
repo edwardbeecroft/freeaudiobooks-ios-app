@@ -731,7 +731,7 @@ private extension AudiobookPlayerVC {
         guard !isTrackingListeningSession else { return }
         isTrackingListeningSession = true
         // print("Audio stats started counting")
-        SessionTrackingManager.shared.startSession()
+        SessionTrackingManager.shared.startSession(contentUUID: bookInternal.contentUUID, contentType: "bookInternal", mode: "audio")
     }
 
     func endListeningStatsSessionIfNeeded() {

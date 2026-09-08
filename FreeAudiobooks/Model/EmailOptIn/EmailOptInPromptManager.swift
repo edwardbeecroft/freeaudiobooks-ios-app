@@ -35,7 +35,7 @@ class EmailOptInPromptManager {
             return false
         }
 
-        // Already subscribed to marketing (from Brevo check)
+        // Already subscribed to marketing (from the app marketing preference)
         if user.marketingPermission {
             return false
         }
@@ -62,7 +62,7 @@ class EmailOptInPromptManager {
             return (false, .notAuthenticated)
         }
 
-        // Already subscribed to marketing (from Brevo check)
+        // Already subscribed to marketing (from the app marketing preference)
         if user.marketingPermission {
             return (false, .alreadySubscribed)
         }
@@ -195,19 +195,8 @@ class EmailOptInPromptManager {
             dismissCount: dismissCount
         )
 
-        // Subscribe user via EmailMarketingService with segmentation data
-        emailMarketingService.subscribeUser(
-            trigger: trigger,
-            genre: genre
-        ) { [weak self] success in
-            if success {
-                // Mark as opted in locally
-                EmailOptInUserDefaults.recordOptIn()
-
-                // Update Firebase user variables
-                self?.updateFirebaseMarketingConsent(permission: true, trigger: trigger)
-            }
-        }
+        EmailOptInUserDefaults.recordOptIn()
+        emailMarketingService.subscribeUser(trigger: trigger, genre: genre) { _ in }
     }
 
     private func handleNotNow(
@@ -226,14 +215,5 @@ class EmailOptInPromptManager {
         EmailOptInUserDefaults.recordDismissal()
     }
 
-    private func updateFirebaseMarketingConsent(permission: Bool, trigger: EmailOptInTrigger) {
-        let date = Date()
-        let data: [String: Any] = [
-            FirebaseUserVariables.marketingPromptAnswered.rawValue: true,
-            FirebaseUserVariables.marketingPermission.rawValue: permission,
-            FirebaseUserVariables.marketingConsentAmendedDate.rawValue: date
-        ]
-        AccountManager.shared.updateUserWithData(data, completion: nil)
-        AccountManager.shared.setMarketingPermission(permission, amendedDate: date)
-    }
+
 }

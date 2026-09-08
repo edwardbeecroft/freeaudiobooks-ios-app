@@ -51,45 +51,45 @@
 	<key>discoverEarlyAccessUnlockCTATitle</key>
 	<string>Try Free</string>
 	<key>emailOptInBookCompletedCTA</key>
-	<string>Send me the roundup</string>
+	<string>Send Me Recommendations</string>
 	<key>emailOptInBookCompletedCTAPaid</key>
-	<string>Send me the roundup</string>
+	<string>Send Me Recommendations</string>
 	<key>emailOptInBookCompletedSubtitleAB</key>
-	<string>Get a monthly roundup tailored to what you love to listen to.</string>
+	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInBookCompletedSubtitlePaid</key>
-	<string>One monthly roundup with new releases and standout picks.</string>
+	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInBookCompletedTitle</key>
 	<string>Keep the momentum going</string>
 	<key>emailOptInBookCompletedTitlePaidAB</key>
 	<string>Keep discovering great listens</string>
 	<key>emailOptInBookSavedCTAAB</key>
-	<string>Get Monthly Picks</string>
+	<string>Send Me Recommendations</string>
 	<key>emailOptInBookSavedCTAPaidAB</key>
-	<string>Get Monthly Picks</string>
+	<string>Send Me Recommendations</string>
 	<key>emailOptInBookSavedSubtitle</key>
-	<string>One email a month with picks in your genres.</string>
+	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInBookSavedSubtitlePaid</key>
-	<string>One email a month with picks tailored to your taste.</string>
+	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInBookSavedTitle</key>
 	<string>Want more like this?</string>
 	<key>emailOptInBookSavedTitlePaid</key>
 	<string>Want more like this?</string>
 	<key>emailOptInDetailViewCTA</key>
-	<string>Get tailored picks</string>
+	<string>Send Me Recommendations</string>
 	<key>emailOptInDetailViewCTAPaid</key>
-	<string>Get personalized picks</string>
+	<string>Send Me Recommendations</string>
 	<key>emailOptInDetailViewSubtitle</key>
-	<string>Get a monthly email with standout picks in your favorite genres.</string>
+	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInDetailViewSubtitlePaid</key>
-	<string>One email a month with picks tailored to your taste.</string>
+	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInDetailViewTitleAB</key>
 	<string>Find your next great listen</string>
 	<key>emailOptInDetailViewTitlePaid</key>
 	<string>Get personalized picks</string>
 	<key>emailOptInOnboardingCTAAB</key>
-	<string>Get Monthly Picks</string>
+	<string>Send Me Recommendations</string>
 	<key>emailOptInOnboardingSubtitle</key>
-	<string>One email a month with standout picks in your genres.</string>
+	<string>Good stories are even better when they find you. Get listening recommendations picked for you. Unsubscribe anytime.</string>
 	<key>emailOptInOnboardingTitleAB</key>
 	<string>Find your next great listen</string>
 	<key>engagementNotificationsDaysDelay</key>

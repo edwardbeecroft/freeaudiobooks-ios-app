@@ -402,7 +402,6 @@ class NewOnboardingContainerVC: UIViewController {
     private func showSignInBottomSheet() {
         let signInVC = SignInBottomSheetVC(coordinator: coordinator)
         signInVC.signInSuccessHandler = { [weak self] in
-            // Existing user signed in - complete onboarding
             self?.coordinator.delegate?.didCompleteNewOnboarding(didSubscribe: false)
         }
         signInVC.modalPresentationStyle = .overFullScreen

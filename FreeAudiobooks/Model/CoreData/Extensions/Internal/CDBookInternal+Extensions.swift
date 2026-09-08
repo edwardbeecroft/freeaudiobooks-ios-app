@@ -261,6 +261,6 @@ extension CDBookInternal: ReadableContentMetadata {
     }
     
     var sharingDeeplinkURL: String? {
-        return deeplinkURL
+        return deeplinkURLFAB
     }
 }

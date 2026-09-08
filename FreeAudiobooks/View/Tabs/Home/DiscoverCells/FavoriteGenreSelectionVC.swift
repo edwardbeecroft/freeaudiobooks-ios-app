@@ -265,9 +265,11 @@ final class FavoriteGenreSelectionVC: BottomSheetController {
         // Update local user object optimistically
         AccountManager.shared.user?.favoriteGenres = genresArray
 
-        let data: [String: Any] = [
+        var data: [String: Any] = [
             FirebaseUserVariables.favoriteGenres.rawValue: genreStrings
         ]
+        // Keep Home and this app's email recommendations in sync with one write.
+        data.merge(EmailMarketingService.profileData(data)) { _, new in new }
 
         AccountManager.shared.updateUserWithData(data) { [weak self] success in
             guard let self = self else { return }

@@ -156,43 +156,25 @@ class ChangePreferencesVC: UIViewController, BEMCheckBoxDelegate {
 		permissionsUpdatedSuccessfullyLabel.alpha = 0
 	}
 	
-	@objc func updatePressed() {
-		showLoadingIndicator(show: true)
-
-		if isSubscribed {
-			// Unsubscribe
-			emailMarketingService.unsubscribeUser { [weak self] success in
-				guard let self = self else { return }
-				if success {
-					AnalyticsManager.shared.trackUserUpdatedMarketingPreferences(subscribed: false)
-					self.isSubscribed = false
-					DispatchQueue.main.async {
-						self.updatePreferencesUI()
-					}
-				} else {
-					self.showError()
-				}
-			}
-		} else {
-			// Subscribe
-			emailMarketingService.subscribeUser(
-				trigger: .accountSettings,
-				genre: resolvedEmailOptInGenre()
-			) { [weak self] success in
-				guard let self = self else { return }
-				if success {
-					AnalyticsManager.shared.trackUserUpdatedMarketingPreferences(subscribed: true)
-					self.isSubscribed = true
-					DispatchQueue.main.async {
-						self.updatePreferencesUI()
-					}
-				} else {
-					self.showError()
-				}
-			}
-		}
-	}
-
+    @objc func updatePressed() {
+        let requested = !isSubscribed
+        updateButton.isEnabled = false
+        preferencesIntroLabel.text = "Saving your preference. If you’re offline, it will sync when you reconnect."
+        let finished: (Bool) -> Void = { [weak self] success in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.updateButton.isEnabled = true
+                if success {
+                    self.isSubscribed = requested
+                    AnalyticsManager.shared.trackUserUpdatedMarketingPreferences(subscribed: requested)
+                    self.updatePreferencesUI()
+                } else { self.updatePreferencesUI(); self.showError() }
+            }
+        }
+        if requested {
+            emailMarketingService.subscribeUser(trigger: .accountSettings, genre: resolvedEmailOptInGenre(), completion: finished)
+        } else { emailMarketingService.unsubscribeUser(completion: finished) }
+    }
 	private func resolvedEmailOptInGenre() -> BookInternalGenre {
 		if let userGenre = AccountManager.shared.user?.favoriteGenres.first {
 			return userGenre

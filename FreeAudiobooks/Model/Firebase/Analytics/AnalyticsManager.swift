@@ -1206,3 +1206,19 @@ class AnalyticsManager {
         handleLogEvent(eventName: EventTypes.recapRetryTapped.rawValue, parameters: nil)
     }
 }
+
+// Email links use the existing analytics path; navigation remains independent of reporting.
+extension AnalyticsManager {
+    func trackEmailAutoEnrolled() {
+        Analytics.logEvent("onbEmailAutoEnrolled", parameters: ["marketing_consent_source": "us_auto_enrol"])
+    }
+
+    func trackEmailLinkOpened(url: URL) {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              DeeplinkManager.shared.getLaunchActionFromDeeplinkURL(url: url) != nil else { return }
+        func value(_ key: String) -> String? { components.queryItems?.first { $0.name == key }?.value }
+        guard value("src") == "email", value("c") == "onboarding_v1",
+              let rawStep = value("s"), let step = Int(rawStep), (0...5).contains(step) else { return }
+        Analytics.logEvent("emailLinkOpened", parameters: ["email_campaign": "onboarding_v1", "email_step": step])
+    }
+}

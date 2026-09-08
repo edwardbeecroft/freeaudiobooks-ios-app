@@ -15,6 +15,11 @@ class APIBookInternalManager {
     private init() {}
     static let shared = APIBookInternalManager()
     
+    private let fabLinksRefreshedKey = "catalogue.fabLinksV5Refreshed"
+    private var catalogueSource: FirestoreSource {
+        UserDefaults.standard.bool(forKey: fabLinksRefreshedKey) ? .default : .server
+    }
+
     var allStories: [APIBookInternal] = []
 }
 
@@ -26,7 +31,7 @@ extension APIBookInternalManager {
             .whereField(APIBookInternalVariables.isHidden.rawValue, isEqualTo: false)
             .order(by: APIBookInternalVariables.datePublished.rawValue, descending: true)
         
-        shortStoriesRef.getDocuments(source: .default) { snapshot, error in
+        shortStoriesRef.getDocuments(source: catalogueSource) { snapshot, error in
             guard
                 error == nil,
                 let snapshot = snapshot else {
@@ -37,6 +42,11 @@ extension APIBookInternalManager {
             
             // Persist to CoreData synchronously for immediate availability
             let savedStories = CoreDataBookInternalManager.shared.persistSynchronously(shortStories)
+            guard savedStories.count == shortStories.count else { return completion(false, []) }
+            if !snapshot.metadata.isFromCache,
+               snapshot.documents.allSatisfy({ ($0.data()["deeplinkURLFAB"] as? String)?.hasPrefix("https://links.freeaudiobooksapp.com/book-internal/") == true }) {
+                UserDefaults.standard.set(true, forKey: self.fabLinksRefreshedKey)
+            }
        
             //logShortStoryData(shortStories: shortStories)
             
@@ -51,7 +61,7 @@ extension APIBookInternalManager {
             .whereField(APIBookInternalVariables.uuid.rawValue, in: uuids)
             .order(by: APIBookInternalVariables.datePublished.rawValue, descending: true)
         
-        shortStoriesRef.getDocuments(source: .default) { snapshot, error in
+        shortStoriesRef.getDocuments(source: catalogueSource) { snapshot, error in
             guard
                 error == nil,
                 let snapshot = snapshot else {

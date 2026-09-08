@@ -56,6 +56,7 @@ extension CoreDataBookInternalManager {
                 try context.save()
             } catch {
                 print("Failed saving context: \(error)")
+                return
             }
             // These are the objects just inserted or updated in the view context; fetching each
             // UUID again would issue one Core Data query per story.
@@ -196,7 +197,7 @@ private extension CoreDataBookInternalManager {
         story.numberOfRatings = Int32(apiBookInternal.numberOfRatings)
         story.availableForAllDateString = apiBookInternal.availableForAllDateString
         story.authorName = apiBookInternal.authorName
-        story.deeplinkURL = apiBookInternal.deeplinkURL
+        story.deeplinkURLFAB = apiBookInternal.deeplinkURLFAB
         story.heroBackgroundImageURL = apiBookInternal.heroBackgroundImageURL
         story.heroBackgroundImageURLXL = apiBookInternal.heroBackgroundImageURLXL
         story.heroLayout = apiBookInternal.heroLayout?.rawValue

@@ -79,21 +79,6 @@ class AccountManager {
 				// Perform migration for savedItemsOrder if needed
 				AccountManager.shared.migrateSavedItemsOrderIfNeeded()
 
-				// Fire-and-forget: Check Brevo for actual subscription status
-				EmailMarketingService().getSubscriptionStatus { subscribed in
-					if let subscribed = subscribed {
-						AccountManager.shared.user?.marketingPermission = subscribed
-
-						// Persist to Firestore if subscribed (keeps Firestore in sync with Brevo)
-						if subscribed {
-							let data: [String: Any] = [
-								FirebaseUserVariables.marketingPermission.rawValue: true
-							]
-							AccountManager.shared.updateUserWithData(data, completion: nil)
-						}
-					}
-				}
-
 				completion(user)
 			} else {
 				completion(nil)
@@ -210,7 +195,7 @@ extension AccountManager {
 extension AccountManager {
     func updateUserWithData(_ data: [String: Any], completion: ((Bool) -> Void)?) {
 		
-		guard let uid = Auth.auth().currentUser?.uid else { return }
+		guard let uid = Auth.auth().currentUser?.uid else { completion?(false); return }
 		
 		let ref = Firestore.firestore().collection(FirebasePaths.users.rawValue).document(uid)
 		ref.setData(data, merge: true, completion: { (error) in
@@ -959,3 +944,21 @@ extension AccountManager {
 //		}
 //	}
 //}
+
+
+extension AccountManager {
+    var knownUserIsSubscribed: Bool? {
+        if AppConstants.shared.developmentMode == .screenshots {
+            return true
+        }
+
+        switch Superwall.shared.subscriptionStatus {
+        case .unknown:
+            return nil
+        case .inactive:
+            return false
+        case .active:
+            return true
+        }
+    }
+}

@@ -10,7 +10,7 @@
 	</array>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:links.freebooksapp.org</string>
+		<string>applinks:links.freeaudiobooksapp.com</string>
 	</array>
 </dict>
 </plist>

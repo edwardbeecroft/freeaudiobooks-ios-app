@@ -8,6 +8,8 @@
 
 import UIKit
 import SuperwallKit
+import FirebaseAuth
+import FirebaseFirestore
 
 // MARK: - Delegate Protocol
 
@@ -111,6 +113,7 @@ class NewOnboardingCoordinator {
 
     /// Starts the onboarding flow from the current step
     func start() {
+        EmailMarketingService.prefetchStorefront()
         guard !steps.isEmpty else {
             delegate?.didCompleteNewOnboarding(didSubscribe: false)
             return
@@ -220,10 +223,9 @@ class NewOnboardingCoordinator {
 
     // MARK: - Private Methods
 
-    /// Completes the onboarding flow: saves data, syncs to Firestore, updates Superwall,
-    /// shows email opt-in if eligible, and notifies delegate.
-    /// Called automatically by goToNextScreen() when the user finishes the final step.
+    /// Saves the app's onboarding once, then handles its email preference and exits.
     private func completeOnboarding() {
+        let firstAppOnboarding = AccountManager.shared.user?.isFirstAppOnboarding == true
         // Mark that onboarding completed this session (for first-launch optimizations)
         NewOnboardingUserDefaults.markOnboardingCompletedThisSession()
 
@@ -253,7 +255,7 @@ class NewOnboardingCoordinator {
         )
 
         // Show email opt-in epilogue if eligible, then notify delegate
-        showEmailOptInIfNeeded { [weak self] in
+        showEmailOptInIfNeeded(isFirstAppOnboarding: firstAppOnboarding) { [weak self] in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 self.delegate?.didCompleteNewOnboarding(didSubscribe: self.dataStore.didSubscribe)
@@ -264,8 +266,26 @@ class NewOnboardingCoordinator {
     // MARK: - Email Marketing Opt-In
 
     /// Presents the email marketing opt-in bottom sheet at the end of the onboarding journey, if the user is eligible.
-    /// User is already authenticated at this point, so Brevo subscription can happen immediately.
-    private func showEmailOptInIfNeeded(completion: @escaping () -> Void) {
+    private func showEmailOptInIfNeeded(isFirstAppOnboarding: Bool, completion: @escaping () -> Void) {
+        if let user = AccountManager.shared.user {
+            let autoEnrol = EmailMarketingService.shouldAutoEnrol(
+                country: EmailMarketingService.storefrontCountryCode, email: user.emailAddress,
+                isFirstAppOnboarding: isFirstAppOnboarding,
+                isEmailSubscribed: user.marketingPermission, previouslyAnswered: user.marketingPromptAnswered,
+                isEmailUnsubscribed: user.marketingUnsubscribedAt != nil,
+                dismissed: user.marketingPromptDismissedAt != nil || EmailOptInUserDefaults.dismissCount > 0 || EmailOptInUserDefaults.isPermanentlySuppressed)
+            if autoEnrol {
+                EmailMarketingService().setPreference(subscribed: true, source: "us_auto_enrol")
+                EmailOptInUserDefaults.recordOptIn()
+                AnalyticsManager.shared.trackEmailAutoEnrolled()
+                completion()
+                return
+            }
+        }
+        presentEmailOptInIfNeeded(completion: completion)
+    }
+
+    private func presentEmailOptInIfNeeded(completion: @escaping () -> Void) {
         // Must be authenticated with an email address
         guard AccountManager.shared.userIsLoggedInToFirebase(),
               let user = AccountManager.shared.user,
@@ -284,10 +304,7 @@ class NewOnboardingCoordinator {
             return
         }
 
-        guard let genre = dataStore.selectedGenres.first else {
-            completion()
-            return
-        }
+        let genre = dataStore.selectedGenres.first ?? .romance
         let isSubscriber = dataStore.didSubscribe
 
         // Track prompt shown
@@ -330,22 +347,8 @@ class NewOnboardingCoordinator {
             dismissCount: EmailOptInUserDefaults.dismissCount
         )
 
-        // Subscribe to Brevo
-        EmailMarketingService().subscribeUser(trigger: .newOnboarding, genre: genre) { success in
-            if success {
-                EmailOptInUserDefaults.recordOptIn()
-            }
-        }
-
-        // Update Firestore marketing consent
-        let date = Date()
-        let data: [String: Any] = [
-            FirebaseUserVariables.marketingPromptAnswered.rawValue: true,
-            FirebaseUserVariables.marketingPermission.rawValue: true,
-            FirebaseUserVariables.marketingConsentAmendedDate.rawValue: date
-        ]
-        AccountManager.shared.updateUserWithData(data, completion: nil)
-        AccountManager.shared.setMarketingPermission(true, amendedDate: date)
+        EmailOptInUserDefaults.recordOptIn()
+        EmailMarketingService().subscribeUser(trigger: .newOnboarding, genre: genre) { _ in }
     }
 
     private func handleEmailNotNow(genre: BookInternalGenre) {
@@ -358,7 +361,7 @@ class NewOnboardingCoordinator {
         // Record dismissal — uses existing escalation logic:
         //   dismiss 1 → 30-day cooldown (bookSaved/accountSettings triggers can re-ask later)
         //   dismiss 2 → permanent suppression
-        // Does NOT write consent fields — "Not now" ≠ explicit opt-out
+        // Persist the dismissal as well as the account-scoped cooldown.
         EmailOptInUserDefaults.recordDismissal()
     }
 
@@ -369,7 +372,13 @@ class NewOnboardingCoordinator {
     private func syncOnboardingDataToFirestore() {
         print("[Onboarding] Syncing onboarding data to Firestore")
 
-        var data: [String: Any] = [:]
+        var data = EmailMarketingService.deviceProfile()
+        if AccountManager.shared.user?.emailOnboardingCompletedAt == nil {
+            data["emailOnboardingCompletedAt"] = FieldValue.serverTimestamp()
+            AccountManager.shared.user?.emailOnboardingCompletedAt = Date()
+            AccountManager.shared.user?.isFirstAppOnboarding = false
+        }
+        data["subscriptionStatusAtOnboarding"] = AccountManager.shared.knownUserIsSubscribed.map { $0 ? "active" : "inactive" } ?? "unknown"
 
         if !dataStore.selectedGenres.isEmpty {
             data[FirebaseUserVariables.favoriteGenres.rawValue] = dataStore.selectedGenres.map { $0.rawValue }
@@ -377,14 +386,15 @@ class NewOnboardingCoordinator {
         if let frequency = dataStore.readingFrequency {
             data[FirebaseUserVariables.readingFrequency.rawValue] = frequency
         }
-        if !dataStore.listeningOccasions.isEmpty {
-            data[FirebaseUserVariables.listeningOccasions.rawValue] = dataStore.listeningOccasions
-        }
         if let source = dataStore.howDidYouHear {
             data[FirebaseUserVariables.howDidYouHear.rawValue] = source
         }
         if !dataStore.previousApps.isEmpty {
             data[FirebaseUserVariables.previousApps.rawValue] = dataStore.previousApps
+        }
+        data["preferredFormat"] = "audio"
+        if !dataStore.listeningOccasions.isEmpty {
+            data[FirebaseUserVariables.listeningOccasions.rawValue] = dataStore.listeningOccasions
         }
         if !dataStore.listeningReasons.isEmpty {
             data[FirebaseUserVariables.listeningReasons.rawValue] = dataStore.listeningReasons
@@ -397,7 +407,12 @@ class NewOnboardingCoordinator {
         }
 
         guard !data.isEmpty else { return }
-        AccountManager.shared.updateUserWithData(data, completion: nil)
+        // Keep existing shared preference screens working; campaign observations are app-specific.
+        let answerKeys = ["favoriteGenres", "readingFrequency", "howDidYouHear", "previousApps",
+                          "listeningOccasions", "listeningReasons", "readingBarriers", "dailyListeningGoal"]
+        var update = data.filter { answerKeys.contains($0.key) }
+        update.merge(EmailMarketingService.profileData(data)) { _, new in new }
+        AccountManager.shared.updateUserWithData(update, completion: nil)
     }
 
     /// Restores dataStore from UserDefaults when resuming

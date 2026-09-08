@@ -349,32 +349,7 @@ class HomeVC: UIViewController {
     }
 
     func handleLaunchAction(_ action: LaunchAction) {
-        switch action {
-        case .bookInternal(let bookUUID):
-            if let bookMetadata = CoreDataBookInternalManager.shared.getWithUUID(uuid: bookUUID) {
-                showBookDetails(bookMetadata)
-            } else {
-                APIBookInternalManager.shared.fetchStoriesWithIDs(uuids: [bookUUID]) { success in
-                    guard
-                        success,
-                        let bookMetadata = CoreDataBookInternalManager.shared.getWithUUID(uuid: bookUUID) else {
-                        return
-                    }
-                    DispatchQueue.main.async {
-                        self.showBookDetails(bookMetadata)
-                    }
-                }
-            }
-        case .savedBooks:
-            (self.tabBarController as? AppTabBarController)?.selectTab(tab: .bookshelf)
-        case .roadmap:
-            let vc = RoadmapVC(wasPresented: false)
-            vc.hidesBottomBarWhenPushed = true
-            self.navigationController?.pushViewController(vc, animated: true)
-        case .section(let sectionUUID):
-            scrollToSectionWithUUID(sectionUUID: sectionUUID)
-        }
-        AppNotifiers.shared.launchActionNeedsHandling = nil
+        (UIApplication.shared.delegate as? AppDelegate)?.handleLaunchAction(action)
     }
 
     func scrollToSectionWithUUID(sectionUUID: String) {

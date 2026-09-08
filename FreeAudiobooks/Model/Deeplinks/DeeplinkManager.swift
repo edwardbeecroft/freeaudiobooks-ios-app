@@ -12,14 +12,15 @@ class DeeplinkManager {
     static let shared = DeeplinkManager()
     private init() {}
 
-    let dynalinksRootURL = "https://links.freebooksapp.org"
     
     func getLaunchActionFromDeeplinkURL(url: URL) -> LaunchAction? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
             return nil
         }
         
-        var pathComponents = components.path.components(separatedBy: "/")
+        guard url.scheme == "freeaudiobooks" || (url.scheme == "https" && url.host == "links.freeaudiobooksapp.com") else { return nil }
+        let effectivePath = url.scheme == "freeaudiobooks" ? "/" + (url.host ?? "") + components.path : components.path
+        var pathComponents = effectivePath.components(separatedBy: "/")
         // the first component is empty, it's just a "", so this removes it
         // the second component is "links", and we care about the next bit, so we remove that too
         pathComponents.removeFirst(1)
@@ -31,6 +32,10 @@ class DeeplinkManager {
                     return LaunchAction.bookInternal(uuid: pathComponents[1])
                 }
                 return nil
+            case "discover": return .emailDiscovery
+            case "onboardingEmailDiscount": return .onboardingEmailDiscount
+            case "paywall":
+                return pathComponents.count == 2 && pathComponents[1] == "onboardingEmailDiscount" ? .onboardingEmailDiscount : nil
             case LaunchAction.savedBooksPath: return LaunchAction.savedBooks
             case LaunchAction.roadmapPath: return LaunchAction.roadmap
             case LaunchAction.sectionPath:
@@ -49,12 +54,16 @@ class DeeplinkManager {
 enum LaunchAction: Equatable {
     case bookInternal(uuid: String)
     case savedBooks
+    case onboardingEmailDiscount
+    case emailDiscovery
     case roadmap
     case section(sectionUUID: String)
 
     var descriptionString: String {
         switch self {
         case .bookInternal: return LaunchAction.bookInternalPath
+        case .emailDiscovery: return "discover"
+        case .onboardingEmailDiscount: return "onboardingEmailDiscount"
         case .savedBooks: return LaunchAction.savedBooksPath
         case .roadmap: return LaunchAction.roadmapPath
         case .section: return LaunchAction.sectionPath

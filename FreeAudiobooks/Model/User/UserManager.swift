@@ -88,6 +88,7 @@ extension UserManager {
             // weeklyBooksReadCount is now a computed property
         ]
 
+
         // Always pull onboarding data from UserDefaults
         if let genres = NewOnboardingUserDefaults.getSelectedGenres(), !genres.isEmpty {
             data[FirebaseUserVariables.favoriteGenres.rawValue] = genres.map { $0.rawValue }
@@ -119,6 +120,14 @@ extension UserManager {
             data[FirebaseUserVariables.dailyListeningGoal.rawValue] = goal
         }
 
+        var profile = EmailMarketingService.deviceProfile()
+        profile["preferredFormat"] = "audio"
+        for key in ["marketingPermission", "marketingPromptAnswered", "marketingConsentAmendedDate",
+                    "favoriteGenres", "readingFrequency", "howDidYouHear", "previousApps",
+                    "listeningOccasions", "listeningReasons", "readingBarriers", "dailyListeningGoal"] {
+            profile[key] = data[key]
+        }
+        data.merge(EmailMarketingService.profileData(profile)) { _, new in new }
         return data
     }
 }

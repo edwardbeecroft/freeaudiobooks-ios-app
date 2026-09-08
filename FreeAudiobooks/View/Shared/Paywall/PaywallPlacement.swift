@@ -22,15 +22,16 @@ enum PaywallPlacement: String {
     case readingInterstitialAdDismissed
     case readingMode
     case onboarding
+    case onboardingEmailDiscount
 
     var popupTitle: String {
         switch self {
-        case .downloadOfflineAudio, .downloadOfflineAudioConnection, .listeningQuota, .bookDetailAdFreeUpsell, .savedBooksUpsell, .homeHeroUpsell, .accountUpsell, .earlyAccess, .earlyAccessSearchResultsUpsell, .readingUpgradeNavIcon, .readingInterstitialAdDismissed, .readingMode, .onboarding: return "" // Unused - go straight to paywall
+        case .downloadOfflineAudio, .downloadOfflineAudioConnection, .listeningQuota, .bookDetailAdFreeUpsell, .savedBooksUpsell, .homeHeroUpsell, .accountUpsell, .earlyAccess, .earlyAccessSearchResultsUpsell, .readingUpgradeNavIcon, .readingInterstitialAdDismissed, .readingMode, .onboarding, .onboardingEmailDiscount: return "" // Unused - go straight to paywall
         }
     }
     var popupSubtitle: String {
         switch self {
-        case .downloadOfflineAudio, .downloadOfflineAudioConnection, .listeningQuota, .bookDetailAdFreeUpsell, .savedBooksUpsell, .homeHeroUpsell, .accountUpsell, .earlyAccess, .earlyAccessSearchResultsUpsell, .readingUpgradeNavIcon, .readingInterstitialAdDismissed, .readingMode, .onboarding: return "" // Unused - go straight to paywall
+        case .downloadOfflineAudio, .downloadOfflineAudioConnection, .listeningQuota, .bookDetailAdFreeUpsell, .savedBooksUpsell, .homeHeroUpsell, .accountUpsell, .earlyAccess, .earlyAccessSearchResultsUpsell, .readingUpgradeNavIcon, .readingInterstitialAdDismissed, .readingMode, .onboarding, .onboardingEmailDiscount: return "" // Unused - go straight to paywall
         }
     }
 }

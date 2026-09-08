@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import FirebaseAuth
 
 /// Manages state persistence for email opt-in prompts.
 ///
@@ -22,15 +23,35 @@ struct EmailOptInUserDefaults {
 
     // MARK: - Keys
 
-    private static let dismissCountKey = "emailOptInDismissCount"
-    private static let lastDismissedAtKey = "emailOptInLastDismissedAt"
-    private static let permanentlySuppressedKey = "emailOptInPermanentlySuppressed"
-    private static let bookDetailViewsKey = "emailOptInBookDetailViews"
-    private static let hasFiredDetailViewTriggerKey = "emailOptInHasFiredDetailViewTrigger"
+    private static var dismissCountKey: String { accountKey("emailOptInDismissCount") }
+    private static var lastDismissedAtKey: String { accountKey("emailOptInLastDismissedAt") }
+    private static var permanentlySuppressedKey: String { accountKey("emailOptInPermanentlySuppressed") }
+    private static var bookDetailViewsKey: String { accountKey("emailOptInBookDetailViews") }
+    private static var hasFiredDetailViewTriggerKey: String { accountKey("emailOptInHasFiredDetailViewTrigger") }
     private static let lastSKReviewRequestKey = "emailOptInLastSKReviewRequest"
-    private static let pendingBookCompletedKey = "emailOptInPendingBookCompleted"
-    private static let pendingBookCompletedGenreKey = "emailOptInPendingBookCompletedGenre"
-    private static let pendingBookCompletedSetAtKey = "emailOptInPendingBookCompletedSetAt"
+    private static var pendingBookCompletedKey: String { accountKey("emailOptInPendingBookCompleted") }
+    private static var pendingBookCompletedGenreKey: String { accountKey("emailOptInPendingBookCompletedGenre") }
+    private static var pendingBookCompletedSetAtKey: String { accountKey("emailOptInPendingBookCompletedSetAt") }
+
+    private static func accountKey(_ name: String) -> String {
+        guard let uid = Auth.auth().currentUser?.uid else { return name }
+        let defaults = UserDefaults.standard
+        // Carry existing device preferences into the first signed-in account after upgrade.
+        // Later account switches get independent state; review-prompt timing stays device-wide.
+        if !defaults.bool(forKey: "emailOptInAccountKeysMigrated") {
+            let names = ["emailOptInDismissCount", "emailOptInLastDismissedAt", "emailOptInPermanentlySuppressed",
+                         "emailOptInBookDetailViews", "emailOptInHasFiredDetailViewTrigger", "emailOptInPendingBookCompleted",
+                         "emailOptInPendingBookCompletedGenre", "emailOptInPendingBookCompletedSetAt"]
+            for legacy in names {
+                let scoped = "\(legacy).\(uid)"
+                if defaults.object(forKey: scoped) == nil, let value = defaults.object(forKey: legacy) {
+                    defaults.set(value, forKey: scoped)
+                }
+            }
+            defaults.set(true, forKey: "emailOptInAccountKeysMigrated")
+        }
+        return "\(name).\(uid)"
+    }
 
     // MARK: - Constants
 
@@ -45,7 +66,14 @@ struct EmailOptInUserDefaults {
 
     // MARK: - Session State (in-memory, resets on app launch)
 
-    private static var _hasShownThisSession: Bool = false
+    private static var shownAccounts = Set<String>()
+    private static var _hasShownThisSession: Bool {
+        get { shownAccounts.contains(Auth.auth().currentUser?.uid ?? "anonymous") }
+        set {
+            let uid = Auth.auth().currentUser?.uid ?? "anonymous"
+            if newValue { shownAccounts.insert(uid) } else { shownAccounts.remove(uid) }
+        }
+    }
     static var hasShownThisSession: Bool {
         get { _hasShownThisSession }
         set { _hasShownThisSession = newValue }
@@ -271,6 +299,7 @@ struct EmailOptInUserDefaults {
 
     /// Records a dismissal (user tapped "Not now" or swiped to dismiss)
     static func recordDismissal() {
+        EmailMarketingService().recordDismissal()
         dismissCount += 1
         lastDismissedAt = Date()
 

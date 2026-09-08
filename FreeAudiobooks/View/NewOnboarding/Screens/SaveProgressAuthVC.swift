@@ -273,17 +273,15 @@ class SaveProgressAuthVC: BaseNewOnboardingVC {
             // Check if user already exists
             AccountManager.shared.userAlreadyHasDocumentInDatabase { hasAccount in
                 if hasAccount {
-                    // Existing user - just sync and proceed
-                    DispatchQueue.main.async {
-                        AnalyticsManager.shared.trackUserLoggedIn()
-                        self.completeAuth(with: signInMethod)
-                    }
+                    // The existence check has already loaded the full user on the main queue.
+                    AnalyticsManager.shared.trackUserLoggedIn()
+                    self.completeAuth(with: signInMethod)
                 } else {
                     // New user - create Firestore document (onboarding data pulled from UserDefaults)
                     AccountManager.shared.addNewDBUserForSocialLogin(
                         firstName: firstName ?? "",
                         lastName: lastName ?? "",
-                        email: email ?? "",
+                        email: email ?? authResult?.user.email ?? "",
                         signupMethod: signInMethod,
                         appleUserIdentifier: appleUserIdentifier
                     ) { success in

@@ -8,6 +8,7 @@
 
 import Foundation
 import FirebaseCore
+import FirebaseAuth
 import FirebaseFirestore
 
 class SessionTrackingManager {
@@ -23,6 +24,8 @@ class SessionTrackingManager {
         static let dailyReadingRecords = "dailyReadingRecords"
     }
 
+    private var contentContext: (uid: String, uuid: String, type: String, mode: String)?
+    private var lastActivityWriteAt: Date?
     private var sessionStartTime: Date?
     private var accumulatedSessionTime: TimeInterval = 0
     private var syncTimer: Timer?
@@ -32,12 +35,17 @@ class SessionTrackingManager {
 
     // MARK: - Session Lifecycle
 
-    func startSession() {
+    func startSession(contentUUID: String, contentType: String, mode: String) {
         guard sessionStartTime == nil else {
             print("⚠️ Session already active - skipping start")
             return
         }
 
+        if let uid = Auth.auth().currentUser?.uid {
+            contentContext = (uid, contentUUID, contentType, mode)
+        } else { contentContext = nil }
+
+        lastActivityWriteAt = nil
         sessionStartTime = Date()
         print("▶️ Started reading session at \(sessionStartTime!)")
 
@@ -69,6 +77,7 @@ class SessionTrackingManager {
 
         // Reset session state (section counter persists across sessions)
         sessionStartTime = nil
+        contentContext = nil
         accumulatedSessionTime = 0
     }
 
@@ -118,14 +127,24 @@ class SessionTrackingManager {
         addReadingTimeToLocalStats(secondsToAdd)
 
         // Update local user object
+        guard contentContext?.uid == Auth.auth().currentUser?.uid else { return }
         user.totalReadingTimeSeconds += secondsToAdd
         user.weeklyReadingTimeSeconds += secondsToAdd
 
         // Sync to Firestore using FieldValue.increment for atomic updates
-        let data: [String: Any] = [
+        var data: [String: Any] = [
             FirebaseUserVariables.totalReadingTimeSeconds.rawValue: FieldValue.increment(Int64(secondsToAdd)),
             FirebaseUserVariables.weeklyReadingTimeSeconds.rawValue: FieldValue.increment(Int64(secondsToAdd))
         ]
+
+        if let content = contentContext, content.uid == Auth.auth().currentUser?.uid,
+          lastActivityWriteAt.map({ Date().timeIntervalSince($0) >= 300 }) ?? true {
+           lastActivityWriteAt = Date()
+           data.merge(EmailMarketingService.profileData([
+               "lastReadContentUUID": content.uuid, "lastReadContentType": content.type,
+               "lastReadMode": content.mode, "lastReadAt": FieldValue.serverTimestamp()
+           ])) { _, new in new }
+       }
 
         AccountManager.shared.updateUserWithData(data) { success in
             if success {

@@ -18,7 +18,6 @@ class AccountDetailsViewController: UIViewController {
 
     let viewModel = AccountDetailsViewModel()
     var delegate: AccountDetailsVCDelegate?
-    private let emailMarketingService = EmailMarketingService()
     
     let nameLabel = UILabel()
     let emailAddressLabel = UILabel()
@@ -28,7 +27,7 @@ class AccountDetailsViewController: UIViewController {
     
     let changeEmailButton = Buttons.primaryCTA(buttonTitle: "Change Email")
     let changePasswordButton = Buttons.primaryCTA(buttonTitle: "Change Password")
-    let changePermissionsButton = Buttons.primaryCTA(buttonTitle: "FreeAudiobooks Newsletter")
+    let changePermissionsButton = Buttons.primaryCTA(buttonTitle: "FreeAudiobooks Recommendations")
     
     private let deleteAccountButton = Buttons.transparentButtonWithBorder(borderColor: nil,
                                                                           buttonTitle: "Delete Account",
@@ -290,19 +289,15 @@ class AccountDetailsViewController: UIViewController {
             return
         }
 
-        // Brevo still needs the authenticated user and their Firestore document.
-        // A marketing-service failure does not prevent account deletion.
-        emailMarketingService.unsubscribeUser { [weak self] _ in
-            guard let self = self else { return }
-            AccountManager.shared.deleteAllDataForCurrentUser(userUUID: userID) { success in
-                DispatchQueue.main.async {
-                    guard success else {
-                        self.showLoadingIndicator(show: false)
-                        self.showUnableToDeleteError()
-                        return
-                    }
-                    self.deleteFirebaseAuthUser(userID: userID)
+        AccountManager.shared.deleteAllDataForCurrentUser(userUUID: userID) { [weak self] success in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                guard success else {
+                    self.showLoadingIndicator(show: false)
+                    self.showUnableToDeleteError()
+                    return
                 }
+                self.deleteFirebaseAuthUser(userID: userID)
             }
         }
     }

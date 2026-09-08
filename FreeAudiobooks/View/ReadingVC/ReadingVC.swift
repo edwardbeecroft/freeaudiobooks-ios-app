@@ -350,7 +350,7 @@ class ReadingVC: UIViewController {
     private func startReadingSessionIfNeeded() {
         guard !isReadingSessionActive else { return }
         isReadingSessionActive = true
-        SessionTrackingManager.shared.startSession()
+        SessionTrackingManager.shared.startSession(contentUUID: metadata.contentUUID, contentType: metadata.contentType.rawValue, mode: "text")
     }
 
     private func endReadingSessionIfNeeded() {

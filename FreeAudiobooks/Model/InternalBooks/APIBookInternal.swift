@@ -34,7 +34,7 @@ enum APIBookInternalVariables: String {
     case rating
     case numberOfRatings
     case availableForAllDateString
-    case deeplinkURL
+    case deeplinkURLFAB
     case authorName
     case containsAdultContent
     case storySummary
@@ -70,7 +70,7 @@ class APIBookInternal {
     let availableForAllDateString: String?
     let authorName: String
     var audio: [APIBookInternalAudio]
-    var deeplinkURL: String
+    var deeplinkURLFAB: String
     let storySummary: String?
     let creatorID: String
     let heroBackgroundImageURL: String?
@@ -103,7 +103,9 @@ class APIBookInternal {
             let rating = data[APIBookInternalVariables.rating.rawValue] as? Double,
             let numberOfRatings = data[APIBookInternalVariables.numberOfRatings.rawValue] as? Int,
             let audioData = data[APIBookInternalVariables.audio.rawValue] as? [[String: Any]],
-            let deeplinkURL = data[APIBookInternalVariables.deeplinkURL.rawValue] as? String,
+            let deeplinkURLFAB = data[APIBookInternalVariables.deeplinkURLFAB.rawValue] as? String,
+            let link = URL(string: deeplinkURLFAB), link.scheme == "https",
+            link.host == "links.freeaudiobooksapp.com", link.path == "/book-internal/\(uuid)",
             let authorName = data[APIBookInternalVariables.authorName.rawValue] as? String,
             let creatorID = data[APIBookInternalVariables.creatorID.rawValue] as? String,
             let chapterCount = data[APIBookInternalVariables.chapterCount.rawValue] as? Int else {
@@ -145,7 +147,7 @@ class APIBookInternal {
         self.authorName = authorName
         self.creatorID = creatorID
         self.audio = audioData.compactMap { APIBookInternalAudio(data: $0) }
-        self.deeplinkURL = deeplinkURL
+        self.deeplinkURLFAB = deeplinkURLFAB
         
         self.chapterCount = chapterCount
     }
@@ -171,7 +173,7 @@ class APIBookInternal {
          availableForAllDateString: String?,
          authorName: String,
          audio: [APIBookInternalAudio],
-         deeplinkURL: String,
+         deeplinkURLFAB: String,
          storySummary: String?,
          creatorID: String,
          heroBackgroundImageURL: String?,
@@ -204,7 +206,7 @@ class APIBookInternal {
         self.availableForAllDateString = availableForAllDateString
         self.authorName = authorName
         self.audio = audio
-        self.deeplinkURL = deeplinkURL
+        self.deeplinkURLFAB = deeplinkURLFAB
         self.storySummary = storySummary
         self.creatorID = creatorID
         self.heroBackgroundImageURL = heroBackgroundImageURL
@@ -239,7 +241,7 @@ extension APIBookInternal {
             APIBookInternalVariables.rating.rawValue: rating,
             APIBookInternalVariables.numberOfRatings.rawValue: numberOfRatings,
             APIBookInternalVariables.audio.rawValue: audio.compactMap { $0.toData() },
-            APIBookInternalVariables.deeplinkURL.rawValue: deeplinkURL,
+            APIBookInternalVariables.deeplinkURLFAB.rawValue: deeplinkURLFAB,
             APIBookInternalVariables.authorName.rawValue: authorName,
             APIBookInternalVariables.creatorID.rawValue: creatorID,
             APIBookInternalVariables.chapterCount.rawValue: chapterCount
