@@ -9,7 +9,6 @@
 import UIKit
 import FirebaseCore
 import FirebaseAuth
-import FirebaseFirestore
 import PopupDialog
 import NVActivityIndicatorView
 import Kingfisher
@@ -179,7 +178,6 @@ class LoadingVC: UIViewController {
 extension LoadingVC {
 	func launchApp() {
         EmailMarketingService.prefetchStorefront(syncProfile: true)
-        EmailMarketingService.updateProfile(["lastAppOpenDate": FieldValue.serverTimestamp()])
 		DispatchQueue.main.async {
 			let customTabBarController = AppTabBarController()
 			if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
