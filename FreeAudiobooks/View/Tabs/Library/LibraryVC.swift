@@ -34,6 +34,29 @@ private struct LibraryJourneyData {
 
 class LibraryVC: UIViewController {
 
+    func applyEntryDestination(_ destination: LibraryDestination) {
+        loadViewIfNeeded()
+        savedDownloadedSegmentedControl.setIndex(destination == .inProgress ? 0 : 1, animated: false)
+        isDownloadedFilterActive = destination == .downloads
+        updateFilterChipAppearance(downloadedFilterButton, isActive: isDownloadedFilterActive)
+        downloadTypeFilterButton.isHidden = true
+        downloadTypeFilterButton.alpha = 0
+        refreshLibraryJourneyData()
+        tableView.reloadData()
+        updateElementVisibility()
+        tableView.setContentOffset(CGPoint(x: 0, y: -tableView.adjustedContentInset.top), animated: false)
+    }
+
+    var entryDestination: LibraryDestination? {
+        guard isViewLoaded else { return nil }
+        switch selectedSegment {
+        case .inProgress: return isDownloadedFilterActive ? nil : .inProgress
+        case .saved: return isDownloadedFilterActive ? .downloads : .saved
+        case .completed: return nil
+        }
+    }
+
+
     private let headerView = HeaderView(
         titleText: "Library",
         alwaysHideUpsell: true,

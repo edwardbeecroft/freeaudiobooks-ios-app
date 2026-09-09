@@ -442,6 +442,21 @@ extension AppDelegate {
         switch launchAction {
         case .bookInternal(let bookUUID): handleBookInternalLaunchAction(bookUUID: bookUUID)
         case .emailDiscovery: handleEmailDiscovery()
+        case .genre(let genre):
+            // A genre link starts a fresh Search, never inheriting another query or refinement.
+            let filters = CDBookInternalSearchObject()
+            filters.genre = genre
+            tabBarController?.viewIfLoaded?.endEditing(true)
+            tabBarController?.dismiss(animated: false)
+            tabBarController?.showSearch(initialFilters: filters)
+        case .genreTag(let genre, let tagID):
+            tabBarController?.viewIfLoaded?.endEditing(true)
+            tabBarController?.dismiss(animated: false)
+            tabBarController?.showGenreTag(genre: genre, tagID: tagID)
+        case .library(let destination):
+            tabBarController?.viewIfLoaded?.endEditing(true)
+            tabBarController?.dismiss(animated: false)
+            tabBarController?.showLibrary(destination: destination)
         case .onboardingEmailDiscount: handleEmailOffer()
         case .savedBooks: handleSavedBooksDeeplink()
         case .roadmap: handleRoadmapDeeplink()
@@ -489,7 +504,9 @@ extension AppDelegate {
         if
             AppNotifiers.shared.tabBarHasLoaded,
             let tabBarController = tabBarController {
-            tabBarController.selectTab(tab: .bookshelf)
+            tabBarController.viewIfLoaded?.endEditing(true)
+            tabBarController.dismiss(animated: false)
+            tabBarController.showLibrary(destination: .saved)
         } else {
             AppNotifiers.shared.launchActionNeedsHandling = .savedBooks
         }

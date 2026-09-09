@@ -99,6 +99,26 @@ class AppTabBarController: UITabBarController, UITabBarControllerDelegate {
 		viewControllers = tabBarList
 	}
 	
+    func showGenreTag(genre: BookInternalGenre, tagID: String) {
+        selectTab(tab: .search)
+        searchNavController?.popToRootViewController(animated: false)
+        searchViewController?.applyGenreTag(genre: genre, tagID: tagID)
+    }
+
+    func showLibrary(destination: LibraryDestination) {
+        selectTab(tab: .bookshelf)
+        guard let navigation = selectedViewController as? UINavigationController,
+              let library = navigation.viewControllers.first as? LibraryVC else { return }
+        navigation.popToRootViewController(animated: false)
+        library.applyEntryDestination(destination)
+    }
+
+    func showSearch(initialFilters: CDBookInternalSearchObject?) {
+        selectTab(tab: .search)
+        searchNavController?.popToRootViewController(animated: false)
+        searchViewController?.applyEntryFilters(initialFilters)
+    }
+
 	var badgeCount: Int = 0
 
     // MARK: - UITabBarControllerDelegate
@@ -158,12 +178,6 @@ extension AppTabBarController {
 
     func selectTab(tab: Tab) {
         selectedIndex = tab.rawValue
-    }
-
-    func showSearch(initialFilters: CDBookInternalSearchObject?) {
-        selectTab(tab: .search)
-        searchNavController?.popToRootViewController(animated: false)
-        searchViewController?.applyEntryFilters(initialFilters)
     }
 
     func handleSectionDeeplink(sectionUUID: String) {

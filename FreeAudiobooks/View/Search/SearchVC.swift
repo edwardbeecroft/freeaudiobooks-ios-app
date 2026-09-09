@@ -1347,11 +1347,58 @@ class SearchVC: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        genreTagRequestID = nil
+    }
+
+    private var genreTagRequestID: UUID?
+    private var genreTagEntryFilters: CDBookInternalSearchObject?
+
+    /// A copy of the current entry state, so callers cannot mutate Search indirectly.
+    var entryFilters: CDBookInternalSearchObject { searchObject.copy() }
+
     // MARK: - External Navigation
+
+    /// Resolve the stable tag ID through the shared genre cache. Unavailable tags leave genre browsing open.
+    func applyGenreTag(genre: BookInternalGenre, tagID: String,
+                       loadTags: (BookInternalGenre, @escaping (Bool, [BookInternalTag]) -> Void) -> Void = {
+                           BookInternalTagManager.shared.ensureHomeEligibleTags(for: $0, completion: $1)
+                       }) {
+        let filters = CDBookInternalSearchObject()
+        filters.genre = genre
+        applyEntryFilters(filters)
+        let requestID = UUID()
+        genreTagRequestID = requestID
+        genreTagEntryFilters = searchObject.copy()
+        loadTags(genre) { [weak self] success, tags in
+            guard let self, self.genreTagRequestID == requestID,
+                  self.matchesGenreTagEntryFilters else { return }
+            self.genreTagRequestID = nil
+            guard success, let tag = tags.first(where: {
+                $0.id == tagID && $0.genre == genre && $0.isHomeEligible
+            }) else { return }
+            self.searchObject.tag = tag
+            self.refreshSearchExperience(scrollToTop: true)
+        }
+    }
+
+    private var matchesGenreTagEntryFilters: Bool {
+        guard let entry = genreTagEntryFilters else { return false }
+        return searchObject.genre == entry.genre && searchObject.tag == entry.tag &&
+            searchObject.query == entry.query && searchObject.sortOption == entry.sortOption &&
+            searchObject.format == entry.format && searchObject.minimumRating == entry.minimumRating &&
+            searchObject.minReadingTime == entry.minReadingTime && searchObject.maxReadingTime == entry.maxReadingTime &&
+            searchObject.includeAdultContentForRomance == entry.includeAdultContentForRomance &&
+            searchObject.page == entry.page && searchObject.pageSize == entry.pageSize
+    }
+
 
     /// Applies a new entry state when Search is opened from another tab.
     /// Passing `nil` resets Search back to the default browse view.
     func applyEntryFilters(_ filters: CDBookInternalSearchObject?) {
+        genreTagRequestID = nil
+        genreTagEntryFilters = nil
         searchObject = filters?.copy() ?? CDBookInternalSearchObject()
         if searchObject.genre == .romance {
             searchObject.includeAdultContentForRomance = true
@@ -1680,6 +1727,8 @@ class SearchVC: UIViewController {
     }
 
     private func refreshSearchExperience(scrollToTop: Bool = false) {
+        // User refinements cancel a pending tag lookup; catalogue refreshes with unchanged filters do not.
+        if !matchesGenreTagEntryFilters { genreTagRequestID = nil }
         performSearch()
         updateFilterChips()
         updateDiscoveryHeaderContent()
