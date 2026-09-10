@@ -115,10 +115,6 @@ class AnalyticsManager {
         case bookInternalAudioCompleted // Additional to bookInternalCompleted, which is called for both text/audio completions
         case bookInternalUncompleted
         
-        case bookRatingSubmitted
-        case bookInternalRatingSubmitted // Internal
-        case bookInternalAudiobookRatingSubmitted // Internal - audiobook
-        case bookRatingSubmittedWithComment // All
         case bookRated
         case bookRatedWithComment
         case bookRatedWithAuthorShare
@@ -446,29 +442,6 @@ class AnalyticsManager {
     }
     func trackBookInternalUncompleted() {
         handleLogEvent(eventName: EventTypes.bookInternalUncompleted.rawValue, parameters: nil)
-    }
-    
-    func trackBookRatingSubmitted(rating: Double) {
-        handleLogEvent(eventName: EventTypes.bookRatingSubmitted.rawValue,
-                       parameters: ["bookRating": "\(Int(rating))"])
-    }
-    func trackBookInternalRatingSubmitted(rating: Double,
-                                          genre: BookInternalGenre) {
-        handleLogEvent(eventName: EventTypes.bookInternalRatingSubmitted.rawValue,
-                       parameters: ["bookInternalRating": "\(Int(rating))",
-                                    AnalyticsParameter.genre.rawValue: genre.displayString])
-    }
-    func trackBookInternalAudiobookRatingSubmitted(rating: Double,
-                                                   genre: BookInternalGenre) {
-        handleLogEvent(eventName: EventTypes.bookInternalAudiobookRatingSubmitted.rawValue,
-                       parameters: ["bookInternalAudiobookRating": "\(Int(rating))",
-                                    AnalyticsParameter.genre.rawValue: genre.displayString])
-    }
-    func trackBookRatingSubmittedWithComment(rating: Double,
-                                             genre: BookInternalGenre) {
-        handleLogEvent(eventName: EventTypes.bookRatingSubmittedWithComment.rawValue,
-                       parameters: ["bookInternalRating": "\(Int(rating))",
-                                    AnalyticsParameter.genre.rawValue: genre.displayString])
     }
     
     func trackBookOffsetOutOfBounds() {

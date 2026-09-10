@@ -919,23 +919,6 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
             let authorShareSelected = reviewAnalyticsContext.showsAuthorShare && authorShareButton.isSelected
             showLoadingIndicator(show: true)
 
-            // Track analytics
-            switch reviewedContentType {
-            case .bookInternal:
-                if let genre = (metadata as? CDBookInternal)?.genre {
-                    analytics.trackBookInternalRatingSubmitted(rating: rating, genre: genre)
-                }
-            case .bookInternalAudiobook:
-                if let genre = (metadata as? CDBookInternal)?.genre {
-                    analytics.trackBookInternalAudiobookRatingSubmitted(rating: rating, genre: genre)
-                }
-            }
-
-            // This will only work for internal books/audiobooks, but that's fine
-            if comment != nil, let genre = (metadata as? CDBookInternal)?.genre {
-                analytics.trackBookRatingSubmittedWithComment(rating: rating, genre: genre)
-            }
-
             recordRating(rating, metadata, reviewedContentType, comment) { [weak self] result in
                 guard let self = self else { return }
 

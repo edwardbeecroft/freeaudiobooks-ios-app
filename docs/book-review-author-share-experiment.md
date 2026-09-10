@@ -29,7 +29,7 @@ Before a star rating is selected, the checkbox row is hidden and occupies no spa
 | `bookRatedWithComment` | Successful save with non-whitespace comment text | Primary winner metric |
 | `bookRatedWithAuthorShare` | Successful save with checkbox selected, with or without comment | Checkbox uptake |
 
-The three outcome events come only from this popup and fire after success, for both new and updated reviews. Failures, responses with `success: false`, and continuing without a rating produce none of them. Existing submission-attempt events retain their meanings and names.
+The three outcome events come only from this popup and fire after success, for both new and updated reviews. Failures, responses with `success: false`, and continuing without a rating produce none of them. The legacy submission-attempt events (`bookRatingSubmitted`, `bookInternalRatingSubmitted`, `bookInternalAudiobookRatingSubmitted`, and `bookRatingSubmittedWithComment`) are retired in this release. Use `bookRated` for overall successful reviews and `bookRatedWithComment` for successful written reviews. Older app versions can continue emitting the legacy events; existing historical data is unchanged. Do not combine legacy and success-event counts.
 
 Exposure and outcomes include `author_share_variant` (`control`/`checkbox`), `book_review_variant`, and `content_type` (`bookInternal`/`bookInternalAudiobook`). Outcomes additionally include `rating`, `has_comment`, `author_share_selected`, and `is_update`. The existing analytics logger serializes parameter values as strings; Boolean values are `1`/`0`. Review text is never included. Outcome values reflect the submitted snapshot, not subsequent UI edits.
 

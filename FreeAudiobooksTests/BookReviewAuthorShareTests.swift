@@ -82,7 +82,7 @@ final class BookReviewAuthorShareTests: XCTestCase {
                         if selection { fixture.checkbox?.sendActions(for: .touchUpInside) }
                         fixture.continueButton.sendActions(for: .touchUpInside)
                         XCTAssertEqual(fixture.requests.count, 1)
-                        XCTAssertTrue(fixture.outcomes.isEmpty)
+                        XCTAssertTrue(fixture.events.isEmpty)
                         let request = try XCTUnwrap(fixture.requests.first)
                         XCTAssertEqual(request.rating, 3)
                         XCTAssertEqual(request.type, type)
@@ -132,7 +132,7 @@ final class BookReviewAuthorShareTests: XCTestCase {
             fixture.checkbox?.sendActions(for: .touchUpInside)
             fixture.continueButton.sendActions(for: .touchUpInside)
             try XCTUnwrap(fixture.requests.first).complete(result)
-            XCTAssertTrue(fixture.outcomes.isEmpty)
+            XCTAssertTrue(fixture.events.isEmpty)
         }
     }
 
