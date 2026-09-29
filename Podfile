@@ -28,7 +28,7 @@ target 'FreeAudiobooks' do
   pod 'BetterSegmentedControl'
   pod 'Cosmos', '~> 25.0'
   pod 'Google-Mobile-Ads-SDK'
-  pod 'SuperwallKit', '4.16.3'
+  pod 'SuperwallKit', '4.17.0'
   pod 'SkeletonView', '~> 1.30'
 
   # Pods for FreeAudiobooks
