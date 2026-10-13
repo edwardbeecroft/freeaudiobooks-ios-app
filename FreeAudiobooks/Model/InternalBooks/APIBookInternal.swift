@@ -147,8 +147,15 @@ class APIBookInternal {
         self.isHidden = isHidden
         self.isSubscriptionOnly = isSubscriptionOnly
         self.containsAdultContent = containsAdultContent
-        self.rating = rating
-        self.numberOfRatings = numberOfRatings
+        // The app shows readers' and listeners' ratings as one score everywhere: lists, sorting,
+        // filters and the book page all read these two fields.
+        let audio = audioData.compactMap { APIBookInternalAudio(data: $0) }
+        let combined = CombinedRating.combine(
+            book: (rating: rating, count: numberOfRatings),
+            audiobook: audio.first { $0.language == .english }.map { (rating: $0.rating, count: $0.numberOfRatings) }
+        )
+        self.rating = combined.rating
+        self.numberOfRatings = combined.numberOfRatings
 
         // Optional field - parse if present (format: YYYY-MM-DD)
         self.availableForAllDateString = data[APIBookInternalVariables.availableForAllDateString.rawValue] as? String
@@ -171,12 +178,24 @@ class APIBookInternal {
 
         self.authorName = authorName
         self.creatorID = creatorID
-        self.audio = audioData.compactMap { APIBookInternalAudio(data: $0) }
+        self.audio = audio
         self.deeplinkURLFAB = deeplinkURLFAB
         
         self.chapterCount = chapterCount
     }
     
+}
+
+/// Readers' and listeners' ratings as one score: the book's and its English audiobook's stored totals,
+/// weighted by how many ratings each has. The same formula is in freebooks-ios functions/combinedRating.js.
+enum CombinedRating {
+    static func combine(book: (rating: Double, count: Int),
+                        audiobook: (rating: Double, count: Int)?) -> (rating: Double, numberOfRatings: Int) {
+        let parts = [book, audiobook].compactMap { $0 }.filter { $0.rating > 0 && $0.rating <= 5 && $0.count > 0 }
+        let count = parts.reduce(0) { $0 + $1.count }
+        guard count > 0 else { return (0, 0) }
+        return (parts.reduce(0) { $0 + $1.rating * Double($1.count) } / Double(count), count)
+    }
 }
 
 extension APIBookInternal {

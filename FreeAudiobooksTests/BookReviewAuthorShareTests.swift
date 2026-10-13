@@ -381,3 +381,25 @@ private struct ReviewMetadata: ReadableContentMetadata {
     func markCompleted() {}
     func isCompleted() -> Bool { true }
 }
+
+final class CombinedRatingTests: XCTestCase {
+    func testBookAndAudiobookRatingsCombineWeightedByCount() {
+        let combined = CombinedRating.combine(book: (rating: 4.5, count: 90), audiobook: (rating: 4.0, count: 10))
+        XCTAssertEqual(combined.rating, 4.45, accuracy: 0.0001)
+        XCTAssertEqual(combined.numberOfRatings, 100)
+    }
+
+    func testEitherScoreAloneStandsAndUnratedBooksHaveNone() {
+        XCTAssertEqual(CombinedRating.combine(book: (rating: 4.2, count: 3), audiobook: nil).numberOfRatings, 3)
+        XCTAssertEqual(CombinedRating.combine(book: (rating: 0, count: 0), audiobook: (rating: 3.5, count: 2)).rating, 3.5)
+        let unrated = CombinedRating.combine(book: (rating: 0, count: 0), audiobook: (rating: 0, count: 0))
+        XCTAssertEqual(unrated.rating, 0)
+        XCTAssertEqual(unrated.numberOfRatings, 0)
+    }
+
+    func testOutOfRangeTotalsAreIgnored() {
+        let combined = CombinedRating.combine(book: (rating: 5, count: 1), audiobook: (rating: 7, count: 4))
+        XCTAssertEqual(combined.rating, 5)
+        XCTAssertEqual(combined.numberOfRatings, 1)
+    }
+}

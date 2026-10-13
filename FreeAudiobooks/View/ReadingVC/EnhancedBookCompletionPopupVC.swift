@@ -941,17 +941,21 @@ final class EnhancedBookCompletionPopupVC: BottomSheetController {
                     }
                     print("✅ Successfully submitted rating. New rating: \(response.newRating), Total ratings: \(response.newNumberOfRatings)")
 
-                    // Update local CoreData with new ratings based on content type
+                    // Update local CoreData with new ratings based on content type. The book's score is
+                    // readers' and listeners' ratings together, so either kind of rating changes it.
+                    if let bookInternal = self.metadata as? CDBookInternal,
+                       let combinedRating = response.combinedRating ?? (self.reviewedContentType == .bookInternal ? response.newRating : nil),
+                       let combinedNumberOfRatings = response.combinedNumberOfRatings ?? (self.reviewedContentType == .bookInternal ? response.newNumberOfRatings : nil) {
+                        let context = CoreDataBookInternalManager.shared.getContext()
+                        context.perform {
+                            bookInternal.rating = combinedRating
+                            bookInternal.numberOfRatings = Int32(combinedNumberOfRatings)
+                            CoreDataBookInternalManager.shared.saveContext()
+                        }
+                    }
                     switch self.reviewedContentType {
                     case .bookInternal:
-                        if let bookInternal = self.metadata as? CDBookInternal {
-                            let context = CoreDataBookInternalManager.shared.getContext()
-                            context.perform {
-                                bookInternal.rating = response.newRating
-                                bookInternal.numberOfRatings = Int32(response.newNumberOfRatings)
-                                CoreDataBookInternalManager.shared.saveContext()
-                            }
-                        }
+                        break
                     case .bookInternalAudiobook:
                         if let audioData = self.audioData {
                             let context = CoreDataBookInternalAudioManager.shared.getContext()

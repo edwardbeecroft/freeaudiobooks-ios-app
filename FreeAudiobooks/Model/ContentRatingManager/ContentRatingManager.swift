@@ -13,6 +13,9 @@ struct SubmitBookReviewResponse: Decodable {
     let newRating: Double
     let newNumberOfRatings: Int
     let isUpdate: Bool
+    /// Readers' and listeners' ratings together: the score the app shows for the book.
+    var combinedRating: Double? = nil
+    var combinedNumberOfRatings: Int? = nil
 }
 
 class ContentRatingManager {
