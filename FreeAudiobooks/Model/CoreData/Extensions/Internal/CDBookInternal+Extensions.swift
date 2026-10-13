@@ -25,6 +25,11 @@ extension CDBookInternal {
     var tags: [String] {
         tagsData as? [String] ?? []
     }
+
+    /// Set for romance books only; nil when the book has no spice level.
+    var romanceSpiceLevel: RomanceSpiceLevel? {
+        spiceLevel.flatMap { RomanceSpiceLevel(rawValue: $0.intValue) }
+    }
     // Note: chapters are now stored in CDBookInternalContent, not embedded in CDBookInternal
     var readingTimeInt: Int {
         return Int(readingTimeMinutes)

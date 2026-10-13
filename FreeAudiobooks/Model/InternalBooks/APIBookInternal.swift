@@ -46,6 +46,24 @@ enum APIBookInternalVariables: String {
     case heroSubtitle
     case chapterCount
     case tags
+    case spiceLevel
+}
+
+/// The romance spice level Story Writer sets when it publishes a romance (1–5).
+enum RomanceSpiceLevel: Int, CaseIterable, Codable {
+    case one = 1
+    case two = 2
+    case three = 3
+    case four = 4
+    case five = 5
+
+    var displayValue: String {
+        String(rawValue)
+    }
+
+    var containsAdultContent: Bool {
+        rawValue >= 3
+    }
 }
 
 class APIBookInternal {
@@ -80,6 +98,7 @@ class APIBookInternal {
     let heroSubtitle: String?
     var chapterCount: Int
     let tags: [String]
+    let spiceLevel: RomanceSpiceLevel?
 
     init?(data: [String: Any]) {
         guard
@@ -143,6 +162,12 @@ class APIBookInternal {
         self.heroTitle = data[APIBookInternalVariables.heroTitle.rawValue] as? String
         self.heroSubtitle = data[APIBookInternalVariables.heroSubtitle.rawValue] as? String
         self.tags = data[APIBookInternalVariables.tags.rawValue] as? [String] ?? []
+        if genreEnum == .romance,
+           let spiceLevelValue = data[APIBookInternalVariables.spiceLevel.rawValue] as? Int {
+            self.spiceLevel = RomanceSpiceLevel(rawValue: spiceLevelValue)
+        } else {
+            self.spiceLevel = nil
+        }
 
         self.authorName = authorName
         self.creatorID = creatorID
@@ -152,157 +177,6 @@ class APIBookInternal {
         self.chapterCount = chapterCount
     }
     
-    init(uuid: String,
-         bookType: BookInternalType,
-         title: String,
-         blurb: String,
-         tagline: String? = nil,
-         coverImageURLXL: String,
-         coverImageURL: String,
-         coverImageURLThumbnail: String,
-         genre: BookInternalGenre,
-         readingTimeMinutes: Int,
-         readerCount: Int,
-         datePublished: Date,
-         dateUpdated: Date,
-         isHidden: Bool,
-         isSubscriptionOnly: Bool,
-         containsAdultContent: Bool,
-         rating: Double,
-         numberOfRatings: Int,
-         availableForAllDateString: String?,
-         authorName: String,
-         audio: [APIBookInternalAudio],
-         deeplinkURLFAB: String,
-         storySummary: String?,
-         creatorID: String,
-         heroBackgroundImageURL: String?,
-         heroBackgroundImageURLXL: String?,
-         heroLayout: HeroCarouselLayout?,
-         heroTitle: String?,
-         heroSubtitle: String?,
-         chapterCount: Int,
-         tags: [String] = []) {
-        self.uuid = uuid
-        self.title = title
-        self.blurb = blurb
-        self.tagline = tagline
-
-        self.coverImageURLXL = coverImageURLXL
-        self.coverImageURL = coverImageURL
-        self.coverImageURLThumbnail = coverImageURLThumbnail
-
-        self.genre = genre
-        self.readingTimeMinutes = readingTimeMinutes
-        self.readerCount = readerCount
-        self.datePublished = datePublished
-        self.dateUpdated = dateUpdated
-        self.isHidden = isHidden
-        self.isSubscriptionOnly = isSubscriptionOnly
-        self.containsAdultContent = containsAdultContent
-        self.bookType = bookType
-        self.rating = rating
-        self.numberOfRatings = numberOfRatings
-        self.availableForAllDateString = availableForAllDateString
-        self.authorName = authorName
-        self.audio = audio
-        self.deeplinkURLFAB = deeplinkURLFAB
-        self.storySummary = storySummary
-        self.creatorID = creatorID
-        self.heroBackgroundImageURL = heroBackgroundImageURL
-        self.heroBackgroundImageURLXL = heroBackgroundImageURLXL
-        self.heroLayout = heroLayout
-        self.heroTitle = heroTitle
-        self.heroSubtitle = heroSubtitle
-        
-        self.chapterCount = chapterCount
-        self.tags = tags
-    }
-}
-
-extension APIBookInternal {
-    func toData() -> [String: Any] {
-        var data: [String: Any] = [
-            APIBookInternalVariables.uuid.rawValue: uuid,
-            APIBookInternalVariables.bookType.rawValue: bookType.rawValue,
-            APIBookInternalVariables.title.rawValue: title,
-            APIBookInternalVariables.blurb.rawValue: blurb,
-            APIBookInternalVariables.coverImageURLXL.rawValue: coverImageURLXL,
-            APIBookInternalVariables.coverImageURL.rawValue: coverImageURL,
-            APIBookInternalVariables.coverImageURLThumbnail.rawValue: coverImageURLThumbnail,
-            APIBookInternalVariables.genre.rawValue: genre.rawValue,
-            APIBookInternalVariables.readingTimeMinutes.rawValue: readingTimeMinutes,
-            APIBookInternalVariables.readerCount.rawValue: readerCount,
-            APIBookInternalVariables.datePublished.rawValue: datePublished,
-            APIBookInternalVariables.dateUpdated.rawValue: dateUpdated,
-            APIBookInternalVariables.isHidden.rawValue: isHidden,
-            APIBookInternalVariables.isSubscriptionOnly.rawValue: isSubscriptionOnly,
-            APIBookInternalVariables.containsAdultContent.rawValue: containsAdultContent,
-            APIBookInternalVariables.rating.rawValue: rating,
-            APIBookInternalVariables.numberOfRatings.rawValue: numberOfRatings,
-            APIBookInternalVariables.audio.rawValue: audio.compactMap { $0.toData() },
-            APIBookInternalVariables.deeplinkURLFAB.rawValue: deeplinkURLFAB,
-            APIBookInternalVariables.authorName.rawValue: authorName,
-            APIBookInternalVariables.creatorID.rawValue: creatorID,
-            APIBookInternalVariables.chapterCount.rawValue: chapterCount
-        ]
-
-        // Only include availableForAllDateString if it's set (prefer string over timestamp)
-        if let availableForAllDateString = availableForAllDateString {
-            data[APIBookInternalVariables.availableForAllDateString.rawValue] = availableForAllDateString
-        } else {
-            data[APIBookInternalVariables.availableForAllDateString.rawValue] = FieldValue.delete()
-        }
-
-        // Only include storySummary if it's set
-        if let storySummary = storySummary {
-            data[APIBookInternalVariables.storySummary.rawValue] = storySummary
-        }
-
-        if let tagline = tagline, !tagline.isEmpty {
-            data[APIBookInternalVariables.tagline.rawValue] = tagline
-        } else {
-            data[APIBookInternalVariables.tagline.rawValue] = FieldValue.delete()
-        }
-
-        if let backgroundImageURL = heroBackgroundImageURL, !backgroundImageURL.isEmpty {
-            data[APIBookInternalVariables.heroBackgroundImageURL.rawValue] = backgroundImageURL
-        } else {
-            data[APIBookInternalVariables.heroBackgroundImageURL.rawValue] = FieldValue.delete()
-        }
-
-        if let backgroundImageURLXL = heroBackgroundImageURLXL, !backgroundImageURLXL.isEmpty {
-            data[APIBookInternalVariables.heroBackgroundImageURLXL.rawValue] = backgroundImageURLXL
-        } else {
-            data[APIBookInternalVariables.heroBackgroundImageURLXL.rawValue] = FieldValue.delete()
-        }
-
-        if let heroLayout {
-            data[APIBookInternalVariables.heroLayout.rawValue] = heroLayout.rawValue
-        } else {
-            data[APIBookInternalVariables.heroLayout.rawValue] = FieldValue.delete()
-        }
-
-        if let heroTitle = heroTitle, !heroTitle.isEmpty {
-            data[APIBookInternalVariables.heroTitle.rawValue] = heroTitle
-        } else {
-            data[APIBookInternalVariables.heroTitle.rawValue] = FieldValue.delete()
-        }
-
-        if let heroSubtitle = heroSubtitle, !heroSubtitle.isEmpty {
-            data[APIBookInternalVariables.heroSubtitle.rawValue] = heroSubtitle
-        } else {
-            data[APIBookInternalVariables.heroSubtitle.rawValue] = FieldValue.delete()
-        }
-
-        if !tags.isEmpty {
-            data[APIBookInternalVariables.tags.rawValue] = tags
-        } else {
-            data[APIBookInternalVariables.tags.rawValue] = FieldValue.delete()
-        }
-
-        return data
-    }
 }
 
 extension APIBookInternal {

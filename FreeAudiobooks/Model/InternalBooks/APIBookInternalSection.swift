@@ -42,11 +42,4 @@ class APIBookInternalSection {
 }
 
 extension APIBookInternalSection {
-    func toData() -> [String: Any] {
-        return [
-            APIBookInternalSectionVariables.uuid.rawValue: uuid,
-            APIBookInternalSectionVariables.position.rawValue: position,
-            APIBookInternalSectionVariables.content.rawValue: content
-        ]
-    }
 }

@@ -47,9 +47,7 @@ extension APIBookInternalManager {
                snapshot.documents.allSatisfy({ ($0.data()["deeplinkURLFAB"] as? String)?.hasPrefix("https://links.freeaudiobooksapp.com/book-internal/") == true }) {
                 UserDefaults.standard.set(true, forKey: self.fabLinksRefreshedKey)
             }
-       
-            //logShortStoryData(shortStories: shortStories)
-            
+
             completion(true, savedStories)
         }
     }
@@ -100,48 +98,5 @@ extension APIBookInternalManager {
         }
         
         CoreDataBookInternalManager.shared.increaseReaderCountForBookInternalWithUUID(bookUUID)
-    }
-}
-
-extension APIBookInternalManager {
-    func logShortStoryData(shortStories: [APIBookInternal]) {
-        // REGULAR
-        print("*** [StoryData] All Books ***")
-        print("[StoryData] Total Books: \(shortStories.count)")
-        var genreCounts = BookInternalGenre.allCases.reduce(into: [BookInternalGenre: Int]()) { dict, genre in
-            dict[genre] = 0
-        }
-        for shortStory in shortStories {
-            genreCounts[shortStory.genre]! += 1
-        }
-        genreCounts.forEach { genreCount in
-            print("[StoryData] \(genreCount.key.displayString) - Count: \(genreCount.value)")
-        }
-        
-        
-        // EARLY ACCESS
-        print("*** [StoryData] Early Access Books ***")
-        let eaStories = shortStories.filter({ $0.isEarlyAccess })
-        print("[StoryData] Total Early Access Books: \(eaStories.count)")
-        
-        var eaGenreCounts = BookInternalGenre.allCases.reduce(into: [BookInternalGenre: Int]()) { dict, genre in
-            dict[genre] = 0
-        }
-        for eaShortStory in eaStories {
-            eaGenreCounts[eaShortStory.genre]! += 1
-        }
-        eaGenreCounts.forEach { eaGenreCount in
-            print("[StoryData] \(eaGenreCount.key.displayString) - Count: \(eaGenreCount.value)")
-        }
-        
-        print("*** [StoryData] Early Access Book Data - For Featuring ***")
-        for story in eaStories {
-            guard
-                let availableForAllDateString = story.availableForAllDateString,
-                let unlockDate = DateFormatters.earlyAccessDateFormatter.date(from: availableForAllDateString) else { continue }
-            print("[StoryData] \(story.title) - \(story.genre) - \(unlockDate.localizedDateString)")
-        }
-        
-        print("[StoryData] Books without tags: \(shortStories.filter { $0.tags.isEmpty }.count)")
     }
 }

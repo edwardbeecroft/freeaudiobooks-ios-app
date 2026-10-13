@@ -13,7 +13,6 @@
 		0D20A6012F50000100AA0001 /* EarlyAccessShortStoryCVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A6022F50000100AA0001 /* EarlyAccessShortStoryCVC.swift */; };
 		0D20A6A22F59000100AA0001 /* ShortStoryCarouselSubtitleTVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A6A12F59000100AA0001 /* ShortStoryCarouselSubtitleTVC.swift */; };
 		0D20A7012F5D000100AA0001 /* DiscoverSearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D20A7022F5D000100AA0001 /* DiscoverSearchBarView.swift */; };
-		0D2F5E0A1B2C3D4E5F607183 /* APIBookSocialPostManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2F5E0A1B2C3D4E5F607182 /* APIBookSocialPostManager.swift */; };
 		0D30B8012F5D100100BB0001 /* ReadingTimeSelectionVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D30B8022F5D100100BB0001 /* ReadingTimeSelectionVC.swift */; };
 		0D44DEB52F2D2227005EF127 /* reading-book.json in Resources */ = {isa = PBXBuildFile; fileRef = 0D44DEB42F2D2227005EF127 /* reading-book.json */; };
 		0D44DEBB2F2D81B1005EF127 /* sparkles.json in Resources */ = {isa = PBXBuildFile; fileRef = 0D44DEBA2F2D81B1005EF127 /* sparkles.json */; };
@@ -481,7 +480,6 @@
 		0D20A6022F50000100AA0001 /* EarlyAccessShortStoryCVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyAccessShortStoryCVC.swift; sourceTree = "<group>"; };
 		0D20A6A12F59000100AA0001 /* ShortStoryCarouselSubtitleTVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortStoryCarouselSubtitleTVC.swift; sourceTree = "<group>"; };
 		0D20A7022F5D000100AA0001 /* DiscoverSearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverSearchBarView.swift; sourceTree = "<group>"; };
-		0D2F5E0A1B2C3D4E5F607182 /* APIBookSocialPostManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIBookSocialPostManager.swift; sourceTree = "<group>"; };
 		0D30B8022F5D100100BB0001 /* ReadingTimeSelectionVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTimeSelectionVC.swift; sourceTree = "<group>"; };
 		0D44DEB42F2D2227005EF127 /* reading-book.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "reading-book.json"; sourceTree = "<group>"; };
 		0D44DEBA2F2D81B1005EF127 /* sparkles.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = sparkles.json; sourceTree = "<group>"; };
@@ -743,6 +741,7 @@
 		75A3733A2FF7A228005CE7C3 /* FreeAudiobooksV4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = FreeAudiobooksV4.xcdatamodel; sourceTree = "<group>"; };
 		75A3AEC029898C9400847D1F /* ReusableInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReusableInfoView.swift; sourceTree = "<group>"; };
 		75A44C222ADF3ADC0059CF3D /* Reachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reachability.swift; sourceTree = "<group>"; };
+		75A4DC63307E255C0058D4C2 /* FreeAudiobooksV6.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = FreeAudiobooksV6.xcdatamodel; sourceTree = "<group>"; };
 		75A95BBA2F263D44004FDF1F /* Jost-MediumItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Jost-MediumItalic.ttf"; sourceTree = "<group>"; };
 		75AE02EF2F158A6700744B9D /* star-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "star-icon.png"; sourceTree = "<group>"; };
 		75AE02F12F158AA200744B9D /* star-icon-empty.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "star-icon-empty.png"; sourceTree = "<group>"; };
@@ -1663,7 +1662,6 @@
 				75B1B4922E9D647100A2A009 /* APIBookInternalAudio.swift */,
 				7563049B2E77642D003A0CC7 /* BookInternalGenre.swift */,
 				75EF9FAD2E6CE58200878C89 /* APIBookInternalManager.swift */,
-				0D2F5E0A1B2C3D4E5F607182 /* APIBookSocialPostManager.swift */,
 				75EF9FE52E6F449500878C89 /* APIBookInternalSection.swift */,
 				750493622E6F826B00669FE4 /* APIBookInternalSectionManager.swift */,
 				750493632E6F826B00669FE4 /* APIBookInternalContentManager.swift */,
@@ -2585,9 +2583,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2602,9 +2604,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-FreeAudiobooks/Pods-FreeAudiobooks-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -2771,7 +2777,6 @@
 				75EB697D2AD5D54C0058724A /* GradientProgressView.swift in Sources */,
 				7515F72E2EDD051500B37DB1 /* MetadataViewProtocols.swift in Sources */,
 				75EF9FAE2E6CE58200878C89 /* APIBookInternalManager.swift in Sources */,
-				0D2F5E0A1B2C3D4E5F607183 /* APIBookSocialPostManager.swift in Sources */,
 				E514320F22B0E4D400ECA157 /* String+Extensions.swift in Sources */,
 				75EF9FEA2E6F612200878C89 /* CoreDataBookInternalContentManager.swift in Sources */,
 				750544362EB9217000237032 /* SelectionTableViewCell.swift in Sources */,
@@ -3211,13 +3216,14 @@
 		75EF66CC2E64450C007180AD /* FreeAudiobooks.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				75A4DC63307E255C0058D4C2 /* FreeAudiobooksV6.xcdatamodel */,
 				75BC051F304F19A0008EAEE9 /* FreeAudiobooksV5.xcdatamodel */,
 				75A3733A2FF7A228005CE7C3 /* FreeAudiobooksV4.xcdatamodel */,
 				75480B042FC6DF58002C3F99 /* FreeAudiobooksV3.xcdatamodel */,
 				75480B022FC6DF58002C3F99 /* FreeAudiobooksV2.xcdatamodel */,
 				75EF66CD2E64450C007180AD /* FreeAudiobooksV1.xcdatamodel */,
 			);
-			currentVersion = 75BC051F304F19A0008EAEE9 /* FreeAudiobooksV5.xcdatamodel */;
+			currentVersion = 75A4DC63307E255C0058D4C2 /* FreeAudiobooksV6.xcdatamodel */;
 			path = FreeAudiobooks.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

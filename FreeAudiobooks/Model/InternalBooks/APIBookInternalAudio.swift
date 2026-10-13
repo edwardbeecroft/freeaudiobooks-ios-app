@@ -112,22 +112,6 @@ class APIBookInternalAudio {
         self.fileSizeBytes = fileSizeBytes
     }
     
-    func toData() -> [String: Any] {
-        return [
-            APIBookInternalAudioVariables.uuid.rawValue: uuid,
-            APIBookInternalAudioVariables.createdDate.rawValue: createdDate,
-            APIBookInternalAudioVariables.language.rawValue: language.rawValue,
-            APIBookInternalAudioVariables.voice.rawValue: voice,
-            APIBookInternalAudioVariables.voiceProvider.rawValue: voiceProvider,
-            APIBookInternalAudioVariables.aiTTSModel.rawValue: aiTTSModel,
-            APIBookInternalAudioVariables.storageURL.rawValue: storageURL,
-            APIBookInternalAudioVariables.rating.rawValue: rating,
-            APIBookInternalAudioVariables.numberOfRatings.rawValue: numberOfRatings,
-            APIBookInternalAudioVariables.listeningTimeSeconds.rawValue: listeningTimeSeconds,
-            APIBookInternalAudioVariables.listeningTimeMinutes.rawValue: listeningTimeMinutes,
-            APIBookInternalAudioVariables.fileSizeBytes.rawValue: fileSizeBytes
-        ]
-    }
 
     private static func doubleValue(from value: Any?) -> Double? {
         if let value = value as? Double {

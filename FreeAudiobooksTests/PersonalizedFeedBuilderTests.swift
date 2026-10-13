@@ -690,92 +690,6 @@ final class BookInternalTagManagerTests: XCTestCase {
         loader.completeGenre(.romance, with: .success([romance]))
         wait(for: [combined], timeout: 1)
     }
-
-    func testCustomerLoadDoesNotCreateCompleteAdminCache() throws {
-        let loader = ControlledBookInternalTagLoader()
-        let manager = BookInternalTagManager(loader: loader)
-        let eligible = try makeManagerTag(id: "fantasy-magic", genre: .fantasy, tag: "magic")
-        let ineligible = try makeManagerTag(id: "fantasy-draft",
-                                            genre: .fantasy,
-                                            tag: "draft",
-                                            isHomeEligible: false)
-        let customerLoaded = expectation(description: "customer loaded")
-
-        manager.ensureHomeEligibleTags(for: .fantasy) { _, _ in customerLoaded.fulfill() }
-        loader.completeGenre(.fantasy, with: .success([eligible]))
-        wait(for: [customerLoaded], timeout: 1)
-        XCTAssertNil(manager.adminBookInternalTag(for: eligible.tag, genre: .fantasy))
-
-        let adminLoaded = expectation(description: "admin loaded")
-        manager.ensureAllBookInternalTagsLoadedForAdmin { success, tags in
-            XCTAssertTrue(success)
-            XCTAssertEqual(Set(tags), Set([eligible, ineligible]))
-            adminLoaded.fulfill()
-        }
-        XCTAssertEqual(loader.allTagRequestCount, 1)
-        loader.completeAll(with: .success([eligible, ineligible]))
-        wait(for: [adminLoaded], timeout: 1)
-        XCTAssertEqual(manager.adminBookInternalTag(for: ineligible.tag, genre: .fantasy), ineligible)
-    }
-
-    func testSavedTagReconciliationHandlesEligibilityAndGenreChanges() throws {
-        let original = try makeManagerTag(id: "shared-id", genre: .fantasy, tag: "quest")
-        let disabled = try makeManagerTag(id: "shared-id",
-                                          genre: .fantasy,
-                                          tag: "quest",
-                                          isHomeEligible: false)
-        let moved = try makeManagerTag(id: "shared-id", genre: .romance, tag: "quest")
-        var cache = BookInternalTagCache()
-        cache.storeEligibleTags([original], for: .fantasy)
-        cache.storeEligibleTags([], for: .romance)
-        cache.storeAllAdminTags([original])
-
-        cache.reconcileSavedTag(disabled)
-        XCTAssertEqual(cache.eligibleTags(for: .fantasy), [])
-        XCTAssertEqual(cache.adminTag(for: "quest", genre: .fantasy), disabled)
-
-        cache.reconcileSavedTag(moved)
-        XCTAssertEqual(cache.eligibleTags(for: .fantasy), [])
-        XCTAssertEqual(cache.eligibleTags(for: .romance), [moved])
-        XCTAssertNil(cache.adminTag(for: "quest", genre: .fantasy))
-        XCTAssertEqual(cache.adminTag(for: "quest", genre: .romance), moved)
-    }
-
-    func testSavedTagDoesNotTurnUnloadedCachesIntoPartialCaches() throws {
-        let tag = try makeManagerTag(id: "romance-sweet", genre: .romance, tag: "sweet")
-        var cache = BookInternalTagCache()
-        cache.storeEligibleTags([], for: .fantasy)
-
-        cache.reconcileSavedTag(tag)
-
-        XCTAssertNil(cache.allAdminTags())
-        XCTAssertNil(cache.eligibleTags(for: .romance))
-        XCTAssertEqual(cache.eligibleTags(for: .fantasy), [])
-    }
-
-    func testFullAdminRefreshOnlyRebuildsAlreadyLoadedCustomerBuckets() throws {
-        let fantasy = try makeManagerTag(id: "fantasy-magic", genre: .fantasy, tag: "magic")
-        let romance = try makeManagerTag(id: "romance-sweet", genre: .romance, tag: "sweet")
-        var cache = BookInternalTagCache()
-        cache.storeEligibleTags([], for: .fantasy)
-
-        cache.storeAllAdminTags([fantasy, romance])
-
-        XCTAssertEqual(cache.eligibleTags(for: .fantasy), [fantasy])
-        XCTAssertNil(cache.eligibleTags(for: .romance))
-    }
-
-    func testFullAdminRefreshToleratesDuplicateLogicalIDs() throws {
-        let original = try makeManagerTag(id: "duplicate-id", genre: .fantasy, tag: "magic")
-        let latest = try makeManagerTag(id: "duplicate-id", genre: .romance, tag: "sweet")
-        var cache = BookInternalTagCache()
-
-        cache.storeAllAdminTags([original, latest])
-
-        XCTAssertEqual(cache.allAdminTags(), [latest])
-        XCTAssertNil(cache.adminTag(for: "magic", genre: .fantasy))
-        XCTAssertEqual(cache.adminTag(for: "sweet", genre: .romance), latest)
-    }
 }
 
 private enum TestTagLoaderError: Error {
@@ -784,9 +698,7 @@ private enum TestTagLoaderError: Error {
 
 private final class ControlledBookInternalTagLoader: BookInternalTagLoading {
     private(set) var genreRequests: [BookInternalGenre] = []
-    private(set) var allTagRequestCount = 0
     private var genreCompletions: [BookInternalGenre: (Result<[BookInternalTag], Error>) -> Void] = [:]
-    private var allTagsCompletion: ((Result<[BookInternalTag], Error>) -> Void)?
 
     func fetchHomeEligibleTags(for genre: BookInternalGenre,
                                source: FirestoreSource,
@@ -795,21 +707,8 @@ private final class ControlledBookInternalTagLoader: BookInternalTagLoading {
         genreCompletions[genre] = completion
     }
 
-    func fetchAllTags(source: FirestoreSource,
-                      completion: @escaping (Result<[BookInternalTag], Error>) -> Void) {
-        allTagRequestCount += 1
-        allTagsCompletion = completion
-    }
-
     func completeGenre(_ genre: BookInternalGenre, with result: Result<[BookInternalTag], Error>) {
         let completion = genreCompletions.removeValue(forKey: genre)
-        XCTAssertNotNil(completion)
-        completion?(result)
-    }
-
-    func completeAll(with result: Result<[BookInternalTag], Error>) {
-        let completion = allTagsCompletion
-        allTagsCompletion = nil
         XCTAssertNotNil(completion)
         completion?(result)
     }

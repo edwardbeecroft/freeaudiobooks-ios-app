@@ -102,37 +102,4 @@ class DiscoverSection: Hashable, Equatable {
 
     // MARK: - Firebase Serialization
 
-    func toData() -> [String: Any] {
-        var data: [String: Any] = [
-            DiscoverSectionVariables.uuid.rawValue: uuid,
-            DiscoverSectionVariables.position.rawValue: position,
-            DiscoverSectionVariables.title.rawValue: title,
-            DiscoverSectionVariables.type.rawValue: type.rawValue,
-            DiscoverSectionVariables.isHidden.rawValue: isHidden
-        ]
-
-        if showReaderCount {
-            data[DiscoverSectionVariables.showReaderCount.rawValue] = showReaderCount
-        } else {
-            data[DiscoverSectionVariables.showReaderCount.rawValue] = FieldValue.delete()
-        }
-
-        let trimmedSubtitle = subtitle?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if type.supportsSubtitle, !trimmedSubtitle.isEmpty {
-            data[DiscoverSectionVariables.subtitle.rawValue] = trimmedSubtitle
-        } else {
-            data[DiscoverSectionVariables.subtitle.rawValue] = FieldValue.delete()
-        }
-
-        // Add optional fields if present
-        if let bookIDs = bookIDs {
-            data[DiscoverSectionVariables.bookIDs.rawValue] = bookIDs
-        }
-
-        if let genre = genre {
-            data[DiscoverSectionVariables.genre.rawValue] = genre.rawValue
-        }
-
-        return data
-    }
 }

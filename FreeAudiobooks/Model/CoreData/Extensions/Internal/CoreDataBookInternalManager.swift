@@ -204,6 +204,7 @@ private extension CoreDataBookInternalManager {
         story.heroTitle = apiBookInternal.heroTitle
         story.heroSubtitle = apiBookInternal.heroSubtitle
         story.tagsData = apiBookInternal.tags as NSArray
+        story.spiceLevel = apiBookInternal.spiceLevel.map { NSNumber(value: $0.rawValue) }
 
         let audioURLsDict = apiBookInternal.audio.reduce(into: [String: String]()) { dict, audio in
             dict[audio.language.rawValue] = audio.storageURL

@@ -48,15 +48,6 @@ struct BookInternalTag: Hashable {
             ?? false
     }
 
-    var firestoreData: [String: Any] {
-        [
-            BookInternalTagVariables.id.rawValue: id,
-            BookInternalTagVariables.genre.rawValue: genre.rawValue,
-            BookInternalTagVariables.tag.rawValue: tag,
-            BookInternalTagVariables.title.rawValue: title,
-            BookInternalTagVariables.isHomeEligible.rawValue: isHomeEligible
-        ]
-    }
 }
 
 enum GenreChartVariables: String {
@@ -88,12 +79,6 @@ struct GenreChart: Hashable {
         self.bookIDs = bookIDs
     }
 
-    var firestoreData: [String: Any] {
-        [
-            GenreChartVariables.genre.rawValue: genre.rawValue,
-            GenreChartVariables.bookIDs.rawValue: bookIDs
-        ]
-    }
 }
 
 /// The single definition of a usable genre chart, shared by Home and by the admin screens that
@@ -131,8 +116,6 @@ protocol BookInternalTagLoading {
     func fetchHomeEligibleTags(for genre: BookInternalGenre,
                                source: FirestoreSource,
                                completion: @escaping (Result<[BookInternalTag], Error>) -> Void)
-    func fetchAllTags(source: FirestoreSource,
-                      completion: @escaping (Result<[BookInternalTag], Error>) -> Void)
 }
 
 final class FirestoreBookInternalTagLoader: BookInternalTagLoading {
@@ -160,27 +143,6 @@ final class FirestoreBookInternalTagLoader: BookInternalTagLoading {
             }
     }
 
-    func fetchAllTags(source: FirestoreSource,
-                      completion: @escaping (Result<[BookInternalTag], Error>) -> Void) {
-        Firestore.firestore()
-            .collection(FirebasePaths.booksInternalTags.rawValue)
-            .getDocuments(source: source) { snapshot, error in
-                if let error {
-                    completion(.failure(error))
-                    return
-                }
-                guard let snapshot else {
-                    completion(.failure(Self.missingSnapshotError))
-                    return
-                }
-
-                let tags = snapshot.documents.compactMap {
-                    BookInternalTag(id: $0.documentID, data: $0.data())
-                }
-                completion(.success(tags))
-            }
-    }
-
     private static let missingSnapshotError = NSError(
         domain: "BookInternalTagManager",
         code: 4,
@@ -190,7 +152,6 @@ final class FirestoreBookInternalTagLoader: BookInternalTagLoading {
 
 struct BookInternalTagCache {
     private(set) var eligibleTagsByGenre: [BookInternalGenre: [BookInternalTag]] = [:]
-    private(set) var allAdminTagsByID: [String: BookInternalTag]?
 
     func eligibleTags(for genre: BookInternalGenre) -> [BookInternalTag]? {
         eligibleTagsByGenre[genre]
@@ -198,45 +159,6 @@ struct BookInternalTagCache {
 
     mutating func storeEligibleTags(_ tags: [BookInternalTag], for genre: BookInternalGenre) {
         eligibleTagsByGenre[genre] = tags.filter { $0.isHomeEligible && $0.genre == genre }
-    }
-
-    mutating func storeAllAdminTags(_ tags: [BookInternalTag]) {
-        allAdminTagsByID = Dictionary(
-            tags.map { ($0.id, $0) },
-            uniquingKeysWith: { _, latest in latest }
-        )
-
-        // A full admin refresh must only refresh customer buckets that were already loaded. It
-        // must not make every genre appear cached and prevent its future scoped Firestore query.
-        for genre in Array(eligibleTagsByGenre.keys) {
-            eligibleTagsByGenre[genre] = tags.filter { $0.isHomeEligible && $0.genre == genre }
-        }
-    }
-
-    func allAdminTags() -> [BookInternalTag]? {
-        allAdminTagsByID.map { Array($0.values) }
-    }
-
-    func adminTag(for tag: String, genre: BookInternalGenre) -> BookInternalTag? {
-        allAdminTagsByID?.values.first { $0.genre == genre && $0.tag == tag }
-    }
-
-    mutating func reconcileSavedTag(_ tag: BookInternalTag) {
-        if allAdminTagsByID != nil {
-            allAdminTagsByID?[tag.id] = tag
-        }
-
-        // The ID may previously have belonged to another genre or may just have become
-        // ineligible, so remove it from every bucket that is already resident first.
-        for genre in Array(eligibleTagsByGenre.keys) {
-            eligibleTagsByGenre[genre]?.removeAll { $0.id == tag.id }
-        }
-
-        // Do not create a destination bucket here: an absent key means that genre still needs its
-        // proper scoped query. Only keep an already-loaded bucket coherent.
-        if tag.isHomeEligible, eligibleTagsByGenre[tag.genre] != nil {
-            eligibleTagsByGenre[tag.genre]?.append(tag)
-        }
     }
 }
 
@@ -246,7 +168,6 @@ final class BookInternalTagManager {
     private let loader: BookInternalTagLoading
     private var cache = BookInternalTagCache()
     private var eligibleTagCompletions: [BookInternalGenre: [(Bool, [BookInternalTag]) -> Void]] = [:]
-    private var adminTagCompletions: [(Bool, [BookInternalTag]) -> Void] = []
     private(set) var genreCharts: [GenreChart] = []
 
     init(loader: BookInternalTagLoading = FirestoreBookInternalTagLoader()) {
@@ -313,46 +234,6 @@ final class BookInternalTagManager {
         }
     }
 
-    func fetchAllBookInternalTagsForAdmin(source: FirestoreSource = .default,
-                                          completion: @escaping (Bool, [BookInternalTag]) -> Void) {
-        onMain { [self] in
-            if !adminTagCompletions.isEmpty {
-                adminTagCompletions.append(completion)
-                return
-            }
-
-            adminTagCompletions = [completion]
-            loader.fetchAllTags(source: source) { [weak self] result in
-                self?.onMain { [weak self] in
-                    guard let self else { return }
-                    let completions = self.adminTagCompletions
-                    self.adminTagCompletions.removeAll()
-                    switch result {
-                    case .success(let tags):
-                        self.cache.storeAllAdminTags(tags)
-                        completions.forEach { $0(true, tags) }
-                    case .failure:
-                        completions.forEach { $0(false, []) }
-                    }
-                }
-            }
-        }
-    }
-
-    func ensureAllBookInternalTagsLoadedForAdmin(completion: @escaping (Bool, [BookInternalTag]) -> Void) {
-        onMain { [self] in
-            if let tags = cache.allAdminTags() {
-                completion(true, tags)
-                return
-            }
-            fetchAllBookInternalTagsForAdmin(completion: completion)
-        }
-    }
-
-    func adminBookInternalTag(for tag: String, genre: BookInternalGenre) -> BookInternalTag? {
-        cache.adminTag(for: tag, genre: genre)
-    }
-
     func chart(genre: BookInternalGenre) -> GenreChart? {
         genreCharts.first { $0.genre == genre }
     }
@@ -375,170 +256,6 @@ final class BookInternalTagManager {
                     completion(true, charts)
                 }
             }
-    }
-
-    func saveGenreChart(genre: BookInternalGenre,
-                        bookIDs: [String],
-                        completion: @escaping (Result<GenreChart, Error>) -> Void) {
-        let requiredBookCount = GenreChartRules.requiredBookCount
-        guard bookIDs.count == requiredBookCount, Set(bookIDs).count == requiredBookCount else {
-            let error = NSError(domain: "BookInternalTagManager",
-                                code: 2,
-                                userInfo: [NSLocalizedDescriptionKey: "Genre charts require exactly \(requiredBookCount) unique books."])
-            DispatchQueue.main.async {
-                completion(.failure(error))
-            }
-            return
-        }
-
-        let chart = GenreChart(id: genre.rawValue, genre: genre, bookIDs: bookIDs)
-        Firestore.firestore()
-            .collection(FirebasePaths.genreCharts.rawValue)
-            .document(chart.id)
-            .setData(chart.firestoreData) { error in
-                DispatchQueue.main.async {
-                    if let error {
-                        completion(.failure(error))
-                        return
-                    }
-
-                    self.upsertGenreChart(chart)
-                    completion(.success(chart))
-                }
-            }
-    }
-
-    func ensureBookInternalTagExists(tag: String,
-                                     title: String,
-                                     genre: BookInternalGenre,
-                                     completion: @escaping (Result<BookInternalTag, Error>) -> Void) {
-        let normalizedTag = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !normalizedTag.isEmpty, !trimmedTitle.isEmpty else {
-            let error = NSError(domain: "BookInternalTagManager",
-                                code: 1,
-                                userInfo: [NSLocalizedDescriptionKey: "Missing tag or title."])
-            DispatchQueue.main.async {
-                completion(.failure(error))
-            }
-            return
-        }
-
-        if let existingTag = adminBookInternalTag(for: normalizedTag, genre: genre) {
-            DispatchQueue.main.async {
-                completion(.success(existingTag))
-            }
-            return
-        }
-
-        let docID = "\(genre.rawValue)_\(normalizedTag)"
-        let collection = Firestore.firestore().collection(FirebasePaths.booksInternalTags.rawValue)
-        let documentRef = collection.document(docID)
-
-        documentRef.getDocument { snapshot, error in
-            if let error {
-                DispatchQueue.main.async {
-                    completion(.failure(error))
-                }
-                return
-            }
-
-            if
-                let snapshot,
-                snapshot.exists,
-                let data = snapshot.data(),
-                let existingTag = BookInternalTag(id: snapshot.documentID, data: data) {
-                DispatchQueue.main.async {
-                    self.upsertBookInternalTag(existingTag)
-                    completion(.success(existingTag))
-                }
-                return
-            }
-
-            let data: [String: Any] = [
-                BookInternalTagVariables.id.rawValue: docID,
-                BookInternalTagVariables.genre.rawValue: genre.rawValue,
-                BookInternalTagVariables.tag.rawValue: normalizedTag,
-                BookInternalTagVariables.title.rawValue: trimmedTitle,
-                BookInternalTagVariables.isHomeEligible.rawValue: false
-            ]
-
-            documentRef.setData(data, merge: true) { error in
-                if let error {
-                    DispatchQueue.main.async {
-                        completion(.failure(error))
-                    }
-                    return
-                }
-
-                guard let createdTag = BookInternalTag(id: docID, data: data) else {
-                    let tagError = NSError(domain: "BookInternalTagManager",
-                                           code: 2,
-                                           userInfo: [NSLocalizedDescriptionKey: "Failed to create tag draft."])
-                    DispatchQueue.main.async {
-                        completion(.failure(tagError))
-                    }
-                    return
-                }
-
-                DispatchQueue.main.async {
-                    self.upsertBookInternalTag(createdTag)
-                    completion(.success(createdTag))
-                }
-            }
-        }
-    }
-
-    func updateBookInternalTag(_ tag: BookInternalTag,
-                               title: String,
-                               isHomeEligible: Bool,
-                               completion: @escaping (Result<BookInternalTag, Error>) -> Void) {
-        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedTitle.isEmpty else {
-            let error = NSError(domain: "BookInternalTagManager",
-                                code: 3,
-                                userInfo: [NSLocalizedDescriptionKey: "Missing tag title."])
-            DispatchQueue.main.async {
-                completion(.failure(error))
-            }
-            return
-        }
-
-        let updatedTag = BookInternalTag(id: tag.id,
-                                         genre: tag.genre,
-                                         tag: tag.tag,
-                                         title: trimmedTitle,
-                                         isHomeEligible: isHomeEligible)
-
-        Firestore.firestore()
-            .collection(FirebasePaths.booksInternalTags.rawValue)
-            .document(tag.id)
-            .setData(updatedTag.firestoreData, merge: true) { error in
-                if let error {
-                    DispatchQueue.main.async {
-                        completion(.failure(error))
-                    }
-                    return
-                }
-
-                DispatchQueue.main.async {
-                    self.upsertBookInternalTag(updatedTag)
-                    completion(.success(updatedTag))
-                }
-            }
-    }
-
-    private func upsertBookInternalTag(_ tag: BookInternalTag) {
-        cache.reconcileSavedTag(tag)
-    }
-
-    private func upsertGenreChart(_ chart: GenreChart) {
-        if let existingIndex = genreCharts.firstIndex(where: { $0.genre == chart.genre }) {
-            genreCharts[existingIndex] = chart
-        } else {
-            genreCharts.append(chart)
-        }
     }
 
     private func onMain(_ work: @escaping () -> Void) {
