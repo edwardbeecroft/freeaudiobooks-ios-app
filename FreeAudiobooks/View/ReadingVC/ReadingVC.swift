@@ -2058,6 +2058,7 @@ private extension ReadingVC {
     ) -> NSAttributedString {
         let bodyFont = font.withSize(textSize)
         let boldFont = font.boldWithSize(textSize)
+        let italicFont = font.italicWithSize(textSize)
         let headingFont = boldFont.withSize(boldFont.pointSize * 1.15)
 
         let isIndented = paragraphStyle == .indented
@@ -2109,6 +2110,20 @@ private extension ReadingVC {
             attributedString.addAttributes(headingAttributes, range: match.range)
         }
 
+        let sceneBreakStyle = NSMutableParagraphStyle()
+        sceneBreakStyle.alignment = .center
+        sceneBreakStyle.paragraphSpacingBefore = isIndented ? bodyFont.lineHeight : 0
+        sceneBreakStyle.paragraphSpacing = isIndented ? bodyFont.lineHeight : 0
+        ReadingMarkup.apply(to: attributedString,
+                            bodyFont: bodyFont,
+                            boldFont: boldFont,
+                            italicFont: italicFont,
+                            sceneBreakAttributes: [
+                                .font: bodyFont,
+                                .foregroundColor: theme.textColor.withAlphaComponent(0.5),
+                                .paragraphStyle: sceneBreakStyle
+                            ])
+
         // Remove indent from the first paragraph after each heading
         if isIndented {
             let noIndentStyle = bodyStyle.mutableCopy() as! NSMutableParagraphStyle
@@ -2117,17 +2132,69 @@ private extension ReadingVC {
                 .paragraphStyle: noIndentStyle
             ]
 
-            for match in matches {
+            // Markup removal shifts ranges, so find the headings again in the final text.
+            let finalText = attributedString.string as NSString
+            let finalMatches = regex.matches(in: attributedString.string, range: NSRange(location: 0, length: finalText.length))
+            for match in finalMatches {
                 // The heading paragraph includes the trailing \n, so skip past it
-                let headingParaRange = nsText.paragraphRange(for: match.range)
+                let headingParaRange = finalText.paragraphRange(for: match.range)
                 let nextParaStart = NSMaxRange(headingParaRange)
-                if nextParaStart < nsText.length {
-                    let nextParaRange = nsText.paragraphRange(for: NSRange(location: nextParaStart, length: 0))
+                if nextParaStart < finalText.length {
+                    let nextParaRange = finalText.paragraphRange(for: NSRange(location: nextParaStart, length: 0))
                     attributedString.addAttributes(noIndentAttributes, range: nextParaRange)
                 }
             }
         }
 
         return attributedString
+    }
+}
+
+/// The light markup manuscripts use: *italic*, **bold**, and a line of --- or * * * for a scene break.
+/// The markers are removed and the text styled. A lone asterisk that doesn't pair up is left as written.
+enum ReadingMarkup {
+    static let sceneBreakText = "•   •   •"
+    private static let sceneBreak = try! NSRegularExpression(pattern: #"^[ \t]*(?:-{3,}|(?:\*[ \t]*){3,})[ \t]*$"#, options: .anchorsMatchLines)
+    private static let bold = try! NSRegularExpression(pattern: #"\*\*(?=[^\s*])([^*\n]+?)(?<=[^\s*])\*\*"#)
+    private static let italic = try! NSRegularExpression(pattern: #"(?<![*\w])\*(?=[^\s*])([^*\n]+?)(?<=[^\s*])\*(?![*\w])"#)
+
+    static func apply(to text: NSMutableAttributedString,
+                      bodyFont: UIFont,
+                      boldFont: UIFont,
+                      italicFont: UIFont?,
+                      sceneBreakAttributes: [NSAttributedString.Key: Any]) {
+        for match in matches(of: sceneBreak, in: text).reversed() {
+            text.replaceCharacters(in: match.range, with: NSAttributedString(string: sceneBreakText, attributes: sceneBreakAttributes))
+        }
+        unwrap(bold, in: text) { range in
+            // Only plain body text becomes bold; a heading is already bold.
+            text.enumerateAttribute(.font, in: range) { value, run, _ in
+                if (value as? UIFont) == bodyFont { text.addAttribute(.font, value: boldFont, range: run) }
+            }
+        }
+        unwrap(italic, in: text) { range in
+            text.enumerateAttribute(.font, in: range) { value, run, _ in
+                if let italicFont, (value as? UIFont) == bodyFont {
+                    text.addAttribute(.font, value: italicFont, range: run)
+                } else {
+                    // No italic face for this font (or it's bold): slant the glyphs instead.
+                    text.addAttribute(.obliqueness, value: 0.18, range: run)
+                }
+            }
+        }
+    }
+
+    private static func matches(of regex: NSRegularExpression, in text: NSAttributedString) -> [NSTextCheckingResult] {
+        regex.matches(in: text.string, range: NSRange(location: 0, length: (text.string as NSString).length))
+    }
+
+    /// Styles each match's inner text, then removes its markers. Works from the end so earlier ranges stay valid.
+    private static func unwrap(_ regex: NSRegularExpression, in text: NSMutableAttributedString, style: (NSRange) -> Void) {
+        for match in matches(of: regex, in: text).reversed() {
+            let inner = match.range(at: 1)
+            style(inner)
+            let styled = text.attributedSubstring(from: inner)
+            text.replaceCharacters(in: match.range, with: styled)
+        }
     }
 }

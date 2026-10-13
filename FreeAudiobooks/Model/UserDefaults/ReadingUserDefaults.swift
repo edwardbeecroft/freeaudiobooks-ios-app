@@ -92,8 +92,8 @@ extension ReadingUserDefaults {
         get {
             guard
                 let value = UserDefaults.standard.string(forKey: fontPath),
-                let unwrapped = ReadingFont(rawValue: value) else {
-                return .bookerly
+                let unwrapped = ReadingFont.fromStoredValue(value) else {
+                return .libron
             }
             return unwrapped
         }

@@ -294,15 +294,21 @@
 		<string>Jost-MediumItalic.ttf</string>
 		<string>Jost-SemiBold.ttf</string>
 		<string>Jost-Bold.ttf</string>
-		<string>Bookerly-Bold.ttf</string>
-		<string>Bookerly-Regular.ttf</string>
-		<string>Bookerly-Light.ttf</string>
+		<string>Libron-Regular.ttf</string>
+		<string>Libron-Italic.ttf</string>
+		<string>Libron-Bold.ttf</string>
+		<string>Mulish-Regular.ttf</string>
+		<string>Mulish-Italic.ttf</string>
+		<string>Mulish-Bold.ttf</string>
 		<string>Atkinson-Hyperlegible-Bold.ttf</string>
 		<string>Atkinson-Hyperlegible-Regular.ttf</string>
 		<string>Karla-Regular.ttf</string>
 		<string>Karla-Bold.ttf</string>
 		<string>Literata-Regular.ttf</string>
 		<string>Literata-Bold.ttf</string>
+		<string>Literata-Italic.ttf</string>
+		<string>Karla-Italic.ttf</string>
+		<string>Jost-LightItalic.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

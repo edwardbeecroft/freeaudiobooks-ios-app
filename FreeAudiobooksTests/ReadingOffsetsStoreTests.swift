@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 @testable import FreeAudiobooks
 
 final class ReadingOffsetsStoreTests: XCTestCase {
@@ -166,5 +167,72 @@ final class TemporaryTextRetentionPolicyTests: XCTestCase {
                 daysSinceLastRead: nil
             )
         )
+    }
+}
+
+final class ReadingMarkupTests: XCTestCase {
+    private let body = UIFont.systemFont(ofSize: 17)
+    private let bold = UIFont.boldSystemFont(ofSize: 17)
+    private let italic = UIFont.italicSystemFont(ofSize: 17)
+
+    private func render(_ string: String, italicFont: UIFont? = nil) -> NSAttributedString {
+        let text = NSMutableAttributedString(string: string, attributes: [.font: body])
+        ReadingMarkup.apply(to: text, bodyFont: body, boldFont: bold, italicFont: italicFont,
+                            sceneBreakAttributes: [.font: body])
+        return text
+    }
+
+    private func font(of substring: String, in text: NSAttributedString) -> UIFont? {
+        let range = (text.string as NSString).range(of: substring)
+        return text.attribute(.font, at: range.location, effectiveRange: nil) as? UIFont
+    }
+
+
+    func testEveryReadingFontLoadsItsRegularBoldAndItalicFaces() {
+        for font in ReadingFont.allCases {
+            XCTAssertNotNil(UIFont(name: font.withSize(.eighteen).fontName, size: 18), "\(font) regular")
+            XCTAssertTrue(font.boldWithSize(.eighteen).fontName.contains("Bold"), "\(font) bold")
+            XCTAssertNotNil(font.italicWithSize(.eighteen), "\(font) italic did not load")
+        }
+    }
+
+    func testRemovedFontsMapToTheirReplacements() {
+        XCTAssertEqual(ReadingFont.fromStoredValue("bookerly"), .libron)
+        XCTAssertEqual(ReadingFont.fromStoredValue("avenirNext"), .mulish)
+        XCTAssertEqual(ReadingFont.fromStoredValue("karla"), .karla)
+        XCTAssertNil(ReadingFont.fromStoredValue("comicSans"))
+        XCTAssertEqual(ReadingFont.allCases.first, .libron)
+    }
+    func testItalicAndBoldMarkersAreRemovedAndStyled() {
+        let text = render("She read it: *Look at THIS.* It was **not** fine.", italicFont: italic)
+        XCTAssertEqual(text.string, "She read it: Look at THIS. It was not fine.")
+        XCTAssertEqual(font(of: "Look at THIS.", in: text), italic)
+        XCTAssertEqual(font(of: "not", in: text), bold)
+        XCTAssertEqual(font(of: "She read", in: text), body)
+    }
+
+    func testFontsWithoutAnItalicFaceAreSlanted() {
+        let text = render("A *quiet* word.")
+        let location = (text.string as NSString).range(of: "quiet").location
+        XCTAssertEqual(text.string, "A quiet word.")
+        XCTAssertEqual(text.attribute(.obliqueness, at: location, effectiveRange: nil) as? Double, 0.18)
+        XCTAssertNil(text.attribute(.obliqueness, at: 0, effectiveRange: nil))
+    }
+
+    func testSceneBreakLinesBecomeADivider() {
+        let text = render("Before.\n\n---\n\nMiddle.\n\n* * *\n\nAfter.\n***")
+        XCTAssertEqual(text.string, "Before.\n\n•   •   •\n\nMiddle.\n\n•   •   •\n\nAfter.\n•   •   •")
+    }
+
+    func testUnpairedAndMidWordAsterisksAreLeftAlone() {
+        XCTAssertEqual(render("A stray * here, a*b*c, and 5 * 3 = 15.").string, "A stray * here, a*b*c, and 5 * 3 = 15.")
+        XCTAssertEqual(render("*Starts but never ends").string, "*Starts but never ends")
+        XCTAssertEqual(render("Not across\n*lines*").string, "Not across\nlines")
+    }
+
+    func testMessageThreadLinesAreEachItalic() {
+        let text = render("*Jessica: Look at THIS. [photo]*\n*Caroline: 😍😍😍*", italicFont: italic)
+        XCTAssertEqual(text.string, "Jessica: Look at THIS. [photo]\nCaroline: 😍😍😍")
+        XCTAssertEqual(font(of: "Caroline:", in: text), italic)
     }
 }
