@@ -68,7 +68,6 @@
 		7515F7342EE580AC00B37DB1 /* EarlyAccessSearchUpsellTVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7515F7332EE580AC00B37DB1 /* EarlyAccessSearchUpsellTVC.swift */; };
 		7515F7362EE5BF4200B37DB1 /* ViewAllCVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7515F7352EE5BF4200B37DB1 /* ViewAllCVC.swift */; };
 		7515F7652EEA294B00B37DB1 /* Array+ReadingTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7515F7642EEA294B00B37DB1 /* Array+ReadingTime.swift */; };
-		7515F7692EEAD5CB00B37DB1 /* APIBookInternalAuthor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7515F7682EEAD5CB00B37DB1 /* APIBookInternalAuthor.swift */; };
 		751778842973718C00A9CB52 /* physics.png in Resources */ = {isa = PBXBuildFile; fileRef = 751778832973718C00A9CB52 /* physics.png */; };
 		751DACB92F52FDB7009402C9 /* welcome-hero-vid-dark.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 751DACB62F52FDB7009402C9 /* welcome-hero-vid-dark.mp4 */; };
 		751DACBB2F52FE39009402C9 /* welcome-hero-vid-light.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 751DACBA2F52FE39009402C9 /* welcome-hero-vid-light.mp4 */; };
@@ -540,7 +539,6 @@
 		7515F7332EE580AC00B37DB1 /* EarlyAccessSearchUpsellTVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarlyAccessSearchUpsellTVC.swift; sourceTree = "<group>"; };
 		7515F7352EE5BF4200B37DB1 /* ViewAllCVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewAllCVC.swift; sourceTree = "<group>"; };
 		7515F7642EEA294B00B37DB1 /* Array+ReadingTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+ReadingTime.swift"; sourceTree = "<group>"; };
-		7515F7682EEAD5CB00B37DB1 /* APIBookInternalAuthor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIBookInternalAuthor.swift; sourceTree = "<group>"; };
 		751778832973718C00A9CB52 /* physics.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = physics.png; sourceTree = "<group>"; };
 		751DACB62F52FDB7009402C9 /* welcome-hero-vid-dark.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "welcome-hero-vid-dark.mp4"; sourceTree = "<group>"; };
 		751DACBA2F52FE39009402C9 /* welcome-hero-vid-light.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "welcome-hero-vid-light.mp4"; sourceTree = "<group>"; };
@@ -1668,7 +1666,6 @@
 			isa = PBXGroup;
 			children = (
 				75EF9FAB2E6CE57A00878C89 /* APIBookInternal.swift */,
-				7515F7682EEAD5CB00B37DB1 /* APIBookInternalAuthor.swift */,
 				75B1B4922E9D647100A2A009 /* APIBookInternalAudio.swift */,
 				7563049B2E77642D003A0CC7 /* BookInternalGenre.swift */,
 				75EF9FAD2E6CE58200878C89 /* APIBookInternalManager.swift */,
@@ -2950,7 +2947,6 @@
 				E59FA382246FD992005DE0F4 /* AppleSignInUserDefaults.swift in Sources */,
 				E514333322B0E56B00ECA157 /* LoadingVC.swift in Sources */,
 				759695D82A7F8FDC001593A6 /* SplitterView.swift in Sources */,
-				7515F7692EEAD5CB00B37DB1 /* APIBookInternalAuthor.swift in Sources */,
 				C1857CD6FFA64BA7DAF6F7A0 /* SignInEmailVC.swift in Sources */,
 				28619ABA97D1180EE33FB812 /* SignInPasswordVC.swift in Sources */,
 				7AE2CD07D881557A7EE6F77F /* PersonalizedPicksAnimationView.swift in Sources */,
